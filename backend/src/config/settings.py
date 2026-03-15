@@ -1,7 +1,3 @@
-"""
-Django settings for config project.
-"""
-
 from pathlib import Path
 import os
 from urllib.parse import urlparse
@@ -31,7 +27,6 @@ INSTALLED_APPS = [
     'endemias',           
 ]
 
-# MIDDLEWARE LIMPO: Sem LocaleMiddleware para evitar o erro de namespace
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', 
@@ -96,10 +91,12 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# --- INTERNACIONALIZAÇÃO CORRIGIDA ---
-LANGUAGE_CODE = 'pt-br'
+# --- INTERNACIONALIZAÇÃO PADRÃO (LIMPA) ---
+# Removendo 'pt-br' para forçar o Django a usar o namespace padrão 'en-us' 
+# Isso evita o erro NoReverseMatch no Admin do Render.
+LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'America/Cuiaba'
-USE_I18N = False # Desativar o motor de tradução dinâmico resolve o bug do namespace
+USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'
