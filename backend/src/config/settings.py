@@ -27,7 +27,6 @@ INSTALLED_APPS = [
     'endemias',           
 ]
 
-# MIDDLEWARE: Removido o LocaleMiddleware que causa o erro de pt-br
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', 
@@ -92,10 +91,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# CONFIGURAÇÃO DE ESTABILIDADE (COMO ESTAVA ANTES)
+# Internacionalização estável
 LANGUAGE_CODE = 'pt-br'
-USE_I18N = False
-USE_L10N = False
+TIME_ZONE = 'America/Cuiaba'
+USE_I18N = True # Ligado agora que as URLs estão registradas
+USE_TZ = True
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
