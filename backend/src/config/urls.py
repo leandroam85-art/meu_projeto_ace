@@ -1,11 +1,14 @@
 from django.contrib import admin
 from django.urls import path, include
-from rest_framework.authtoken import views # <--- IMPORTA O GERADOR DE TOKENS
+from endemias import views
 
 urlpatterns = [
-    path('admin/', admin.site.urls),
-    path('api/', include('endemias.urls')),
+    # Rota principal (Abre o Dashboard)
+    path('', views.dashboard_supervisor, name='dashboard'),
     
-    # Rota que o aplicativo vai usar para validar a senha e pegar o Crachá (Token):
-    path('api/login/', views.obtain_auth_token), 
+    # Rota do Painel de Administração
+    path('admin/', admin.site.urls),
+    
+    # Rotas da API para o Aplicativo do Celular
+    path('api/', include('endemias.urls')),
 ]
