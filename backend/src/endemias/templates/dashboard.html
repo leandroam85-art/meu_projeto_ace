@@ -70,9 +70,9 @@
     // 1. Cria o mapa e aponta para as coordenadas de Vila Rica, MT
     var mapa = L.map('mapa').setView([-10.0125, -51.1130], 14);
 
-    // 2. Carrega o visual das ruas (OpenStreetMap)
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap contributors',
+    // 2. Carrega o visual das ruas (CartoDB - Livre de bloqueios!)
+    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+        attribution: '© OpenStreetMap contributors, © CARTO',
         maxZoom: 19
     }).addTo(mapa);
 

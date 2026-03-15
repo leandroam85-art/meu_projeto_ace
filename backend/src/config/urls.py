@@ -3,15 +3,12 @@ from django.urls import path, include
 from endemias import views
 
 urlpatterns = [
-    # Rota principal (Abre o Dashboard)
+    # Rota principal (Dashboard do Gestor de Vila Rica)
     path('', views.dashboard_supervisor, name='dashboard'),
     
     # Rota do Painel de Administração
     path('admin/', admin.site.urls),
     
-    # Rotas da API para o Aplicativo do Celular
+    # Rotas da API para o Celular dos Agentes
     path('api/', include('endemias.urls')),
-    
-    # ESSA É A CHAVE MÁGICA: Resolve o erro de idioma do Admin!
-    path('i18n/', include('django.conf.urls.i18n')),
 ]

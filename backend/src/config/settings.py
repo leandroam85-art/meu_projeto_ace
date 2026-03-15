@@ -31,11 +31,11 @@ INSTALLED_APPS = [
     'endemias',           
 ]
 
+# A MÁGICA ESTÁ AQUI: Removemos o 'django.middleware.locale.LocaleMiddleware'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'django.middleware.locale.LocaleMiddleware', # <-- Motor de idiomas ativado!
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -96,9 +96,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internacionalização em Português sem bugs!
+# Mantemos em Português, mas sem o motor dinâmico que causa o erro
 LANGUAGE_CODE = 'pt-br'
-USE_I18N = True
+USE_I18N = False
 USE_TZ = True
 
 STATIC_URL = '/static/'
