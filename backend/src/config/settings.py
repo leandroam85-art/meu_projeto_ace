@@ -108,6 +108,12 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # Internacionalização (Vila Rica / Mato Grosso)
 LANGUAGE_CODE = 'pt-br'
+
+# <-- CORREÇÃO AQUI: Força o sistema a ter apenas 1 idioma e remove o erro de NoReverseMatch
+LANGUAGES = [
+    ('pt-br', 'Português'),
+]
+
 TIME_ZONE = 'America/Cuiaba'
 USE_I18N = True
 USE_TZ = True
