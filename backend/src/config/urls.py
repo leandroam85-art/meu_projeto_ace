@@ -3,12 +3,12 @@ from django.urls import path, include
 from endemias import views
 
 urlpatterns = [
-    # Dashboard principal
+    # Rota principal (Dashboard)
     path('', views.dashboard_supervisor, name='dashboard'),
     
-    # Administração
+    # Rota do Painel Admin
     path('admin/', admin.site.urls),
     
-    # API do Aplicativo
+    # Rotas da API para o Celular
     path('api/', include('endemias.urls')),
 ]

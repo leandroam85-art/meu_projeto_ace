@@ -95,10 +95,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# --- SOLUÇÃO DE FERRO PARA O ERRO DE IDIOMA ---
-LANGUAGE_CODE = 'en-us' # Usamos o padrão absoluto do Django
+# --- CONFIGURAÇÃO DEFINITIVA ANTI-ERRO ---
+LANGUAGE_CODE = 'en-us' # Padrão do Django
 TIME_ZONE = 'America/Cuiaba'
-USE_I18N = False # DESLIGADO: Impede que o Django procure namespaces de tradução
+USE_I18N = False # DESLIGADO: Mata o erro de 'pt-br is not a registered namespace'
 USE_TZ = True
 
 STATIC_URL = '/static/'
