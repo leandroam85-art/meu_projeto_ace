@@ -94,9 +94,8 @@ AUTH_PASSWORD_VALIDATORS = [
 
 # CONFIGURAÇÃO DE ESTABILIDADE (COMO ESTAVA ANTES)
 LANGUAGE_CODE = 'pt-br'
-TIME_ZONE = 'America/Cuiaba'
-USE_I18N = False # Isso impede o Django de procurar namespaces de idioma
-USE_TZ = True
+USE_I18N = False
+USE_L10N = False
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
