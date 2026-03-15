@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 # Caminho base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Chave de segurança (Em produção, o ideal é usar variável de ambiente)
+# Chave de segurança
 SECRET_KEY = 'django-insecure-&p=l9_%+2$x&x%ebp@_^!saqcb&mlzlb6@p5s6ze*v6!ji2^^l'
 
 # DEBUG ativo para facilitar ajustes iniciais
@@ -17,7 +17,7 @@ DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# Permissões para o Render e Ngrok não bloquearem o envio de formulários
+# Permissões para o Render e Ngrok
 CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.app',
     'https://*.ngrok-free.dev',
@@ -31,7 +31,7 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles', # Necessário para o CSS
+    'django.contrib.staticfiles', 
     
     # NOSSOS APLICATIVOS E BIBLIOTECAS:
     'django.contrib.gis', 
@@ -42,7 +42,7 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', # <-- ESSENCIAL: Gerencia o CSS na nuvem
+    'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -109,12 +109,7 @@ AUTH_PASSWORD_VALIDATORS = [
 # Internacionalização (Vila Rica / Mato Grosso)
 LANGUAGE_CODE = 'pt-br'
 
-# <-- CORREÇÃO AQUI: Força o sistema a ter apenas 1 idioma e remove o erro de NoReverseMatch
-LANGUAGES = [
-    ('pt-br', 'Português'),
-]
-
-TIME_ZONE = 'America/Cuiaba'
+# <-- CORREÇÃO: Desliga a tradução de rotas que causa o erro "NoReverseMatch"
 USE_I18N = False
 USE_TZ = True
 
@@ -122,10 +117,10 @@ USE_TZ = True
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 
-# Configuração para o WhiteNoise comprimir e guardar o cache dos arquivos (deixa o site rápido)
+# Configuração para o WhiteNoise
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Arquivos de Mídia (Fotos enviadas pelos agentes)
+# Arquivos de Mídia
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
