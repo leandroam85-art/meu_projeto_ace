@@ -1,7 +1,3 @@
-"""
-Django settings for config project.
-"""
-
 from pathlib import Path
 import os
 from urllib.parse import urlparse
@@ -95,10 +91,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# CONFIGURAÇÃO DE ESTABILIDADE:
-# Usamos en-us para evitar que o Django procure caminhos de tradução inexistentes (pt-br).
-LANGUAGE_CODE = 'en-us'
-USE_I18N = False
+# CONFIGURAÇÃO DE IDIOMA ESTÁVEL
+LANGUAGE_CODE = 'pt-br'
+TIME_ZONE = 'America/Cuiaba'
+USE_I18N = True
 USE_TZ = True
 
 STATIC_URL = '/static/'

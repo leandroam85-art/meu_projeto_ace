@@ -1,19 +1,17 @@
 from django.contrib import admin
-from django.urls import path, include, re_path
+from django.urls import path, include
 from endemias import views
-from django.views.generic import RedirectView
 
 urlpatterns = [
-    # Rota principal (Dashboard do Gestor de Vila Rica)
+    # Rota principal do Dashboard
     path('', views.dashboard_supervisor, name='dashboard'),
     
-    # Rota do Painel de Administração
+    # Rota do Painel Admin
     path('admin/', admin.site.urls),
     
-    # Rotas da API para o Celular dos Agentes
+    # Rota das APIs do Aplicativo
     path('api/', include('endemias.urls')),
     
-    # CORREÇÃO DEFINITIVA: Se o sistema tentar redirecionar para 'pt-br/', 
-    # este comando captura e joga o usuário de volta para o admin.
-    re_path(r'^pt-br/', RedirectView.as_view(url='/admin/', permanent=False)),
+    # ESSA LINHA RESOLVE O ERRO: Registra o motor de tradução
+    path('i18n/', include('django.conf.urls.i18n')),
 ]
