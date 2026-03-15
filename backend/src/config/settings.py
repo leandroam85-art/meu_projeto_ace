@@ -95,16 +95,11 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# --- CONFIGURAÇÃO DE IDIOMA BLINDADA ---
-LANGUAGE_CODE = 'pt-br'
+# --- SOLUÇÃO DE FERRO PARA O ERRO DE IDIOMA ---
+LANGUAGE_CODE = 'en-us' # Usamos o padrão absoluto do Django
 TIME_ZONE = 'America/Cuiaba'
-USE_I18N = True
+USE_I18N = False # DESLIGADO: Impede que o Django procure namespaces de tradução
 USE_TZ = True
-
-# Registramos os idiomas aceitos explicitamente para o Django não se perder
-LANGUAGES = [
-    ('pt-br', 'Portuguese'),
-]
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
