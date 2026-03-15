@@ -6,25 +6,18 @@ from pathlib import Path
 import os
 from urllib.parse import urlparse
 
-# Caminho base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Chave de segurança
 SECRET_KEY = 'django-insecure-&p=l9_%+2$x&x%ebp@_^!saqcb&mlzlb6@p5s6ze*v6!ji2^^l'
-
-# DEBUG ativo para facilitar ajustes iniciais
 DEBUG = True
-
 ALLOWED_HOSTS = ['*']
 
-# Permissões para o Render e Ngrok
 CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.app',
     'https://*.ngrok-free.dev',
     'https://*.onrender.com',
 ]
 
-# Definição dos Aplicativos
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -32,8 +25,6 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles', 
-    
-    # NOSSOS APLICATIVOS E BIBLIOTECAS:
     'django.contrib.gis', 
     'rest_framework',     
     'rest_framework.authtoken',
@@ -44,6 +35,7 @@ MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', 
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware', # <-- Motor de idiomas ativado!
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -71,7 +63,6 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# --- BANCO DE DADOS (SUPABASE / LOCAL) ---
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
@@ -98,7 +89,6 @@ else:
         }
     }
 
-# Validação de Senhas
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -106,19 +96,15 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internacionalização (Voltando para o padrão interno para evitar o bug do pt-br)
-LANGUAGE_CODE = 'en-us'
+# Internacionalização em Português sem bugs!
+LANGUAGE_CODE = 'pt-br'
 USE_I18N = True
 USE_TZ = True
 
-# --- ARQUIVOS ESTÁTICOS (CSS, JS, IMAGENS) ---
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
-# Configuração para o WhiteNoise
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
-# Arquivos de Mídia
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 

@@ -11,4 +11,7 @@ urlpatterns = [
     
     # Rotas da API para o Aplicativo do Celular
     path('api/', include('endemias.urls')),
+    
+    # ESSA É A CHAVE MÁGICA: Resolve o erro de idioma do Admin!
+    path('i18n/', include('django.conf.urls.i18n')),
 ]
