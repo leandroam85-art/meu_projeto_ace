@@ -1,7 +1,3 @@
-"""
-Django settings for config project.
-"""
-
 from pathlib import Path
 import os
 from urllib.parse import urlparse
@@ -31,6 +27,7 @@ INSTALLED_APPS = [
     'endemias',           
 ]
 
+# MIDDLEWARE: Removido o LocaleMiddleware que causa o erro de pt-br
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', 
@@ -95,10 +92,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# --- CONFIGURAÇÃO DEFINITIVA ANTI-ERRO ---
-LANGUAGE_CODE = 'en-us' # Padrão do Django
+# CONFIGURAÇÃO DE ESTABILIDADE (COMO ESTAVA ANTES)
+LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Cuiaba'
-USE_I18N = False # DESLIGADO: Mata o erro de 'pt-br is not a registered namespace'
+USE_I18N = False # Isso impede o Django de procurar namespaces de idioma
 USE_TZ = True
 
 STATIC_URL = '/static/'
