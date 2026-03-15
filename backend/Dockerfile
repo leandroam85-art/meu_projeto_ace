@@ -26,5 +26,4 @@ COPY ./src /app/
 # Comando que força a criação/atualização do seu usuário leandro
 CMD sh -c "python manage.py collectstatic --noinput; \
            python manage.py migrate; \
-           python manage.py shell -c \"from django.contrib.auth import get_user_model; User = get_user_model(); u, created = User.objects.get_or_create(username='leandro'); u.set_password('Servidor@#26'); u.is_superuser=True; u.is_staff=True; u.save(); print('Senha do Leandro atualizada!')\"; \
            gunicorn config.wsgi:application --bind 0.0.0.0:${PORT:-10000}"
