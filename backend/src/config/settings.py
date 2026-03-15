@@ -31,7 +31,6 @@ INSTALLED_APPS = [
     'endemias',           
 ]
 
-# A MÁGICA ESTÁ AQUI: Removemos o 'django.middleware.locale.LocaleMiddleware'
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', 
@@ -96,8 +95,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Mantemos em Português, mas sem o motor dinâmico que causa o erro
-LANGUAGE_CODE = 'pt-br'
+# CONFIGURAÇÃO DE ESTABILIDADE:
+# Usamos en-us para evitar que o Django procure caminhos de tradução inexistentes (pt-br).
+LANGUAGE_CODE = 'en-us'
 USE_I18N = False
 USE_TZ = True
 
