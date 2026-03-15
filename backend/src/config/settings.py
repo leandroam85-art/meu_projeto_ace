@@ -4,6 +4,7 @@ Django settings for config project.
 
 from pathlib import Path
 import os
+from urllib.parse import urlparse  # <-- ADICIONADO: Tradutor de links de Banco de Dados
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -14,13 +15,14 @@ SECRET_KEY = 'django-insecure-&p=l9_%+2$x&x%ebp@_^!saqcb&mlzlb6@p5s6ze*v6!ji2^^l
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-# LIBERADO PARA QUALQUER NGROK ACESSAR
+# LIBERADO PARA QUALQUER NGROK OU RENDER ACESSAR
 ALLOWED_HOSTS = ['*']
 
-# NOVA REGRA: PERMITE QUE O APLICATIVO ENVIE DADOS (POST/PUT) PELO NGROK
+# NOVA REGRA: PERMITE QUE O APLICATIVO ENVIE DADOS (POST/PUT) PELO NGROK E RENDER
 CSRF_TRUSTED_ORIGINS = [
     'https://*.ngrok-free.app',
     'https://*.ngrok-free.dev',
+    'https://*.onrender.com',  # <-- ADICIONADO: Permissão para o Render não bloquear envios
 ]
 
 # Application definition
@@ -69,17 +71,34 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# Database
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.contrib.gis.db.backends.postgis',
-        'NAME': 'sistema_endemias',
-        'USER': 'admin_saude',
-        'PASSWORD': 'senha_super_segura',
-        'HOST': 'db', 
-        'PORT': '5432',
+# Database - LÓGICA INTELIGENTE PARA SUPABASE E LOCAL
+DATABASE_URL = os.environ.get('DATABASE_URL')
+
+if DATABASE_URL:
+    # Se o Render mandar o link do Supabase, o Django lê, divide as partes e usa o motor PostGIS:
+    url = urlparse(DATABASE_URL)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis', # <-- MOTOR DE MAPAS NA NUVEM!
+            'NAME': url.path[1:],
+            'USER': url.username,
+            'PASSWORD': url.password,
+            'HOST': url.hostname,
+            'PORT': url.port,
+        }
     }
-}
+else:
+    # Configuração antiga (para o seu Docker local não quebrar quando testar no PC)
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.contrib.gis.db.backends.postgis',
+            'NAME': 'sistema_endemias',
+            'USER': 'admin_saude',
+            'PASSWORD': 'senha_super_segura',
+            'HOST': 'db', 
+            'PORT': '5432',
+        }
+    }
 
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
