@@ -1,15 +1,9 @@
-from rest_framework import viewsets
-from .models import Agente, Imovel, Visita
-from .serializers import AgenteSerializer, ImovelSerializer, VisitaSerializer
+from django.shortcuts import render
+from django.contrib.auth.decorators import login_required
 
-class AgenteViewSet(viewsets.ModelViewSet):
-    queryset = Agente.objects.all()
-    serializer_class = AgenteSerializer
-
-class ImovelViewSet(viewsets.ModelViewSet):
-    queryset = Imovel.objects.all()
-    serializer_class = ImovelSerializer
-
-class VisitaViewSet(viewsets.ModelViewSet):
-    queryset = Visita.objects.all()
-    serializer_class = VisitaSerializer
+# Essa "trava" garante que apenas pessoas com senha (como o supervisor) acessem o painel
+@login_required(login_url='/admin/login/')
+def dashboard_supervisor(request):
+    # Por enquanto, estamos apenas carregando a tela. 
+    # No futuro, o Python vai calcular os focos de dengue e enviar para cá!
+    return render(request, 'dashboard.html')

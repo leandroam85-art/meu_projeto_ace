@@ -1,12 +1,11 @@
+from django.contrib import admin
 from django.urls import path, include
-from rest_framework.routers import DefaultRouter
-from .views import AgenteViewSet, ImovelViewSet, VisitaViewSet
-
-router = DefaultRouter()
-router.register(r'agentes', AgenteViewSet)
-router.register(r'imoveis', ImovelViewSet)
-router.register(r'visitas', VisitaViewSet)
+from endemias import views  # <-- 1. Importamos as regras que acabamos de criar!
 
 urlpatterns = [
-    path('', include(router.urls)),
+    # 2. Agora, o endereço principal do site carrega o Dashboard!
+    path('', views.dashboard_supervisor, name='dashboard'), 
+    
+    path('admin/', admin.site.urls),
+    path('api/', include('endemias.urls')),
 ]
