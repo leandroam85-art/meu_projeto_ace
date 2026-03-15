@@ -106,11 +106,9 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# Internacionalização (Vila Rica / Mato Grosso)
-LANGUAGE_CODE = 'pt-br'
-
-# <-- CORREÇÃO: Desliga a tradução de rotas que causa o erro "NoReverseMatch"
-USE_I18N = False
+# Internacionalização (Voltando para o padrão interno para evitar o bug do pt-br)
+LANGUAGE_CODE = 'en-us'
+USE_I18N = True
 USE_TZ = True
 
 # --- ARQUIVOS ESTÁTICOS (CSS, JS, IMAGENS) ---
