@@ -1,19 +1,28 @@
+"""
+Django settings for config project.
+"""
+
 from pathlib import Path
 import os
 from urllib.parse import urlparse
 
+# Caminho base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
 
+# Chave de segurança
 SECRET_KEY = 'django-insecure-&p=l9_%+2$x&x%ebp@_^!saqcb&mlzlb6@p5s6ze*v6!ji2^^l'
+
+# DEBUG ativo para facilitar ajustes iniciais
 DEBUG = True
+
 ALLOWED_HOSTS = ['*']
 
+# Permissões para o Render
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.ngrok-free.app',
-    'https://*.ngrok-free.dev',
     'https://*.onrender.com',
 ]
 
+# Definição dos Aplicativos
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -21,6 +30,8 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles', 
+    
+    # NOSSOS APLICATIVOS E BIBLIOTECAS:
     'django.contrib.gis', 
     'rest_framework',     
     'rest_framework.authtoken',
@@ -58,6 +69,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# --- BANCO DE DADOS (SUPABASE) ---
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
@@ -76,32 +88,23 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.contrib.gis.db.backends.postgis',
-            'NAME': 'sistema_endemias',
-            'USER': 'admin_saude',
-            'PASSWORD': 'senha_super_segura',
-            'HOST': 'db', 
+            'NAME': 'postgres',
+            'USER': 'postgres',
+            'PASSWORD': 'password',
+            'HOST': 'localhost', 
             'PORT': '5432',
         }
     }
 
-AUTH_PASSWORD_VALIDATORS = [
-    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
-    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
-]
-
-# Internacionalização estável
+# Internacionalização
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Cuiaba'
-USE_I18N = True # Ligado agora que as URLs estão registradas
+USE_I18N = True
 USE_TZ = True
 
+# Arquivos Estáticos
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-MEDIA_URL = '/media/'
-MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
