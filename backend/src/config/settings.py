@@ -1,3 +1,7 @@
+"""
+Django settings for config project.
+"""
+
 from pathlib import Path
 import os
 from urllib.parse import urlparse
@@ -91,13 +95,16 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# --- INTERNACIONALIZAÇÃO PADRÃO (LIMPA) ---
-# Removendo 'pt-br' para forçar o Django a usar o namespace padrão 'en-us' 
-# Isso evita o erro NoReverseMatch no Admin do Render.
-LANGUAGE_CODE = 'en-us'
+# --- CONFIGURAÇÃO DE IDIOMA BLINDADA ---
+LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Cuiaba'
 USE_I18N = True
 USE_TZ = True
+
+# Registramos os idiomas aceitos explicitamente para o Django não se perder
+LANGUAGES = [
+    ('pt-br', 'Portuguese'),
+]
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
