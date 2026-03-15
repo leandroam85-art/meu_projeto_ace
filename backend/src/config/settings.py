@@ -1,3 +1,7 @@
+"""
+Django settings for config project.
+"""
+
 from pathlib import Path
 import os
 from urllib.parse import urlparse
@@ -27,6 +31,7 @@ INSTALLED_APPS = [
     'endemias',           
 ]
 
+# MIDDLEWARE LIMPO: Sem LocaleMiddleware para evitar o erro de namespace
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', 
@@ -91,10 +96,10 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# CONFIGURAÇÃO DE IDIOMA ESTÁVEL
+# --- INTERNACIONALIZAÇÃO CORRIGIDA ---
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Cuiaba'
-USE_I18N = True
+USE_I18N = False # Desativar o motor de tradução dinâmico resolve o bug do namespace
 USE_TZ = True
 
 STATIC_URL = '/static/'
