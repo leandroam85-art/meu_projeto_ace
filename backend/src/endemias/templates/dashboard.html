@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Supervisor - Vila Rica</title>
+    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 </head>
 <body class="bg-light">
 
@@ -12,7 +16,7 @@
     <div class="container-fluid">
         <span class="navbar-brand mb-0 h1">📍 Vigilância Sanitária - Painel do Supervisor</span>
         <span class="navbar-text text-white">
-            Bem-vindo(a), {{ request.user.username }}!
+            Bem-vindo(a), {{ request.user.username|default:"Supervisor" }}!
         </span>
     </div>
 </nav>
@@ -23,8 +27,8 @@
             <div class="card text-white bg-success mb-3">
                 <div class="card-header">Visitas Realizadas</div>
                 <div class="card-body">
-                    <h2 class="card-title">150</h2>
-                    <p class="card-text">Nesta semana</p>
+                    <h2 class="card-title">{{ total_visitas|default:"0" }}</h2>
+                    <p class="card-text">Total registrado</p>
                 </div>
             </div>
         </div>
@@ -33,8 +37,8 @@
             <div class="card text-white bg-danger mb-3">
                 <div class="card-header">Focos de Dengue</div>
                 <div class="card-body">
-                    <h2 class="card-title">12</h2>
-                    <p class="card-text">Nesta semana</p>
+                    <h2 class="card-title">{{ focos_dengue|default:"0" }}</h2>
+                    <p class="card-text">Total registrado</p>
                 </div>
             </div>
         </div>
@@ -43,24 +47,61 @@
             <div class="card text-white bg-info mb-3">
                 <div class="card-header">Agentes Ativos</div>
                 <div class="card-body">
-                    <h2 class="card-title">8</h2>
-                    <p class="card-text">Trabalhando hoje</p>
+                    <h2 class="card-title">{{ agentes_ativos|default:"0" }}</h2>
+                    <p class="card-text">Cadastrados no sistema</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-4">
+    <div class="row mt-4 mb-5">
         <div class="col-12">
             <div class="card">
-                <div class="card-header text-bg-dark">Mapa de Risco Interativo</div>
-                <div class="card-body" style="height: 400px; background-color: #e9ecef; display: flex; align-items: center; justify-content: center;">
-                    <p class="text-muted">O mapa com os pontos dos imóveis será carregado aqui...</p>
+                <div class="card-header text-bg-dark">Mapa de Risco Interativo - Vila Rica</div>
+                <div class="card-body p-0">
+                    <div id="mapa" style="height: 500px; width: 100%; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+<script>
+    // 1. Cria o mapa e aponta para as coordenadas de Vila Rica, MT
+    var mapa = L.map('mapa').setView([-10.0125, -51.1130], 14);
+
+    // 2. Carrega o visual das ruas (OpenStreetMap)
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap contributors',
+        maxZoom: 19
+    }).addTo(mapa);
+
+    // 3. Marcador Fixo da Base de Controle
+    var marcadorBase = L.marker([-10.0125, -51.1130]).addTo(mapa);
+    marcadorBase.bindPopup("<b>Centro de Controle</b><br>Vigilância Sanitária.");
+
+    // --- MÁGICA DOS DADOS REAIS DO BANCO ---
+    
+    // O Django envia o JSON e o JavaScript lê aqui:
+    var marcadoresBanco = {{ marcadores_json|safe }};
+
+    // Criando um ícone vermelho para chamar atenção para o perigo!
+    var iconeVermelho = L.icon({
+        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
+        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
+        iconSize: [25, 41],
+        iconAnchor: [12, 41],
+        popupAnchor: [1, -34],
+        shadowSize: [41, 41]
+    });
+
+    // Loop que percorre todos os focos encontrados e os "planta" no mapa
+    marcadoresBanco.forEach(function(ponto) {
+        L.marker([ponto.lat, ponto.lng], {icon: iconeVermelho})
+         .addTo(mapa)
+         .bindPopup("<b>⚠️ FOCO DETECTADO!</b><br>" + ponto.descricao);
+    });
+</script>
 
 </body>
 </html>
