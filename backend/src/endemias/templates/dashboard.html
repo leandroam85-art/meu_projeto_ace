@@ -221,10 +221,66 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-secondary"><i class="fa-solid fa-house-chimney-medical me-2"></i> Inspeções de Rotina</h2>
                 </div>
-                <div class="card stat-card p-5 text-center bg-white">
-                    <i class="fa-solid fa-person-digging fa-4x text-muted mb-3"></i>
-                    <h4 class="text-muted">Módulo em Integração</h4>
-                    <p class="text-secondary">A tabela com a lista completa das visitas normais dos agentes aparecerá aqui.</p>
+                
+                <div class="card stat-card bg-white p-4">
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Data / Hora</th>
+                                    <th>Agente Responsável</th>
+                                    <th>Endereço do Imóvel</th>
+                                    <th>Bairro</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Tubitos (Amostras)</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for visita in visitas_rotina %}
+                                <tr>
+                                    <td class="text-secondary fw-bold">
+                                        {% if visita.data_visita %}
+                                            {{ visita.data_visita|date:"d/m/Y H:i" }}
+                                        {% else %}
+                                            S/D
+                                        {% endif %}
+                                    </td>
+                                    <td><i class="fa-solid fa-user-check text-success me-2"></i>{{ visita.agente.nome|default:"Não Informado" }}</td>
+                                    <td>
+                                        <strong>{{ visita.imovel.endereco }}</strong>, Nº {{ visita.imovel.numero }}<br>
+                                        <small class="text-muted">Quadra: {{ visita.imovel.quarteirao }}</small>
+                                    </td>
+                                    <td>{{ visita.imovel.bairro }}</td>
+                                    <td>
+                                        {% if visita.status == 'N' %}
+                                            <span class="badge bg-success">Normal</span>
+                                        {% elif visita.status == 'F' %}
+                                            <span class="badge bg-warning text-dark">Fechada</span>
+                                        {% elif visita.status == 'R' %}
+                                            <span class="badge bg-danger">Recusada</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ visita.status }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        {% if visita.amostras_coletadas > 0 %}
+                                            <span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> {{ visita.amostras_coletadas }}</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark border fs-6">0</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                {% empty %}
+                                <tr>
+                                    <td colspan="6" class="text-center text-muted py-5">
+                                        <i class="fa-solid fa-clipboard-check fa-3x mb-3 text-light"></i><br>
+                                        <h5>Nenhuma visita de rotina registrada ainda.</h5>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -331,23 +387,20 @@
                 </div>
             </div>
 
-        </div> </div> <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+        </div> 
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
-            // Inicializa o Mapa na coordenada central de Vila Rica (Exemplo aproximado)
             var map = L.map('map').setView([-10.0116, -51.1186], 13);
-            
-            // Camada de visualização (OpenStreetMap)
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
             }).addTo(map);
 
-            // Traz os dados escondidos do Python para o Javascript
             var marcadores = JSON.parse('{{ marcadores_json|escapejs }}');
             
-            // Ícone vermelho para focos de dengue
             var iconeVermelho = L.icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
                 shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
@@ -357,7 +410,6 @@
                 shadowSize: [41, 41]
             });
 
-            // Coloca os pinos vermelhos no mapa
             marcadores.forEach(function(m) {
                 if(m.lat && m.lng) {
                     L.marker([m.lat, m.lng], {icon: iconeVermelho})
@@ -366,7 +418,6 @@
                 }
             });
 
-            // Truque do Bootstrap para o mapa não bugar quando mudar de Aba
             var triggerTabList = [].slice.call(document.querySelectorAll('#menu-tabs button'))
             triggerTabList.forEach(function (triggerEl) {
                 var tabTrigger = new bootstrap.Tab(triggerEl)
