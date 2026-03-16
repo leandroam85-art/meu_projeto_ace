@@ -23,13 +23,23 @@
         .icon-box { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
         #map { height: 450px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 2px solid #fff; }
         
+        /* Ajustes do Relatório idênticos ao App */
+        .caixa-filtro { background-color: #f1f3f5; border-radius: 12px; padding: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .btn-calcular { background-color: #78909c; color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
+        .btn-calcular:hover { background-color: #607d8b; color: white; }
+        .titulo-relatorio { background-color: #e0e0e0; color: #333; padding: 12px; border-radius: 8px; font-weight: bold; text-align: center; font-size: 15px; }
+        .card-relatorio { border: none; border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); padding: 20px; background-color: #fff; margin-bottom: 20px; }
+        .card-relatorio h5 { color: #546e7a; font-weight: 700; font-size: 15px; margin-bottom: 15px; border-bottom: 2px solid #eceff1; padding-bottom: 10px; text-transform: uppercase; }
+        .linha-rel { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #f5f5f5; font-size: 15px; }
+        .linha-rel:last-child { border-bottom: none; }
+        .linha-rel .valor { font-weight: bold; color: #1565c0; }
+        .linha-rel.total { font-weight: bold; color: #333; border-top: 2px solid #cfd8dc; margin-top: 5px; }
+
         @media print {
-            .sidebar, .btn { display: none !important; }
+            .sidebar, .btn, .caixa-filtro, .alert { display: none !important; }
             .main-content { margin-left: 0; padding: 0; }
             body { background-color: white; }
-            .accordion-button::after { display: none !important; }
-            .accordion-collapse { display: block !important; }
-            .card { break-inside: avoid; }
+            .card-relatorio { border: 1px solid #ddd; page-break-inside: avoid; }
         }
     </style>
 </head>
@@ -46,7 +56,7 @@
             <li class="nav-item"><button class="nav-link w-100 text-start" id="tab-rotina" data-bs-toggle="pill" data-bs-target="#conteudo-rotina" type="button"><i class="fa-solid fa-house-chimney-medical nav-icon"></i> Inspeções de Rotina</button></li>
             <li class="nav-item"><button class="nav-link w-100 text-start" id="tab-pe" data-bs-toggle="pill" data-bs-target="#conteudo-pe" type="button"><i class="fa-solid fa-industry nav-icon"></i> Inspeções de PE</button></li>
             <li class="nav-item"><button class="nav-link w-100 text-start" id="tab-historico" data-bs-toggle="pill" data-bs-target="#conteudo-historico" type="button"><i class="fa-solid fa-clock-rotate-left nav-icon"></i> Histórico Agrupado</button></li>
-            <li class="nav-item"><button class="nav-link w-100 text-start" id="tab-relatorios" data-bs-toggle="pill" data-bs-target="#conteudo-relatorios" type="button"><i class="fa-solid fa-file-pdf nav-icon"></i> Relatórios Oficiais</button></li>
+            <li class="nav-item"><button class="nav-link w-100 text-start" id="tab-relatorios" data-bs-toggle="pill" data-bs-target="#conteudo-relatorios" type="button"><i class="fa-solid fa-file-pdf nav-icon"></i> Resumo Semanal - PNCD</button></li>
             <hr class="text-white-50 mx-3">
             <li class="nav-item"><button class="nav-link w-100 text-start" id="tab-agentes" data-bs-toggle="pill" data-bs-target="#conteudo-agentes" type="button"><i class="fa-solid fa-users-gear nav-icon"></i> Gerenciar Agentes</button></li>
         </ul>
@@ -212,103 +222,92 @@
 
             <div class="tab-pane fade" id="conteudo-relatorios" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="fw-bold text-secondary"><i class="fa-solid fa-file-pdf me-2 text-primary"></i> Gerador de Relatórios (PNCD)</h2>
+                    <h2 class="fw-bold text-secondary"><i class="fa-solid fa-file-pdf me-2 text-primary"></i> Resumo Semanal - PNCD</h2>
+                    <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print me-2"></i> Imprimir Relatório</button>
                 </div>
                 
-                <div class="card stat-card bg-white p-4 border-start border-primary border-4">
-                    <p class="text-muted mb-4"><i class="fa-solid fa-info-circle me-1"></i> Os dados estão consolidados por <b>Semana Epidemiológica</b> e por <b>Bairro</b>, incluindo a produtividade de cada Agente.</p>
-                    
-                    <div class="accordion shadow-sm" id="accordionRelatorios">
-                        {% for rel in lista_relatorios %}
-                        <div class="accordion-item border-0 border-bottom mb-3">
-                            <h2 class="accordion-header" id="headingRel-{{ forloop.counter }}">
-                                <button class="accordion-button collapsed fw-bold border border-primary rounded" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRel-{{ forloop.counter }}" style="background-color: #e3f2fd; color: #0d6efd;">
-                                    <i class="fa-solid fa-map-location-dot me-2 text-dark"></i> Bairro: <span class="text-dark me-3 ms-1">{{ rel.bairro }}</span>
-                                    <i class="fa-solid fa-calendar-week me-1"></i> Semana: <span class="me-3 ms-1">{{ rel.semana }}</span>
-                                    <span class="badge bg-primary rounded-pill">{{ rel.total_imoveis }} Visitas no Bairro</span>
-                                </button>
-                            </h2>
-                            <div id="collapseRel-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#accordionRelatorios">
-                                <div class="accordion-body p-4 bg-white border border-top-0 border-primary rounded-bottom">
-                                    
-                                    <div class="row g-3">
-                                        <div class="col-md-3">
-                                            <div class="card bg-light border-0 h-100 shadow-sm">
-                                                <div class="card-header bg-secondary text-white fw-bold text-center">Nº IMÓVEIS (TIPO)</div>
-                                                <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Residência (R)</small> <span class="badge bg-dark rounded-pill">{{ rel.R }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Comércio (C)</small> <span class="badge bg-dark rounded-pill">{{ rel.C }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Terreno Baldio (TB)</small> <span class="badge bg-dark rounded-pill">{{ rel.TB }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Ponto Estratégico (PE)</small> <span class="badge bg-dark rounded-pill">{{ rel.PE }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Outros</small> <span class="badge bg-dark rounded-pill">{{ rel.Outros }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent fw-bold border-top border-secondary">TOTAL <span class="badge bg-primary rounded-pill">{{ rel.total_imoveis }}</span></li>
-                                                </ul>
-                                            </div>
-                                        </div>
+                <div class="caixa-filtro mb-4">
+                    <select id="rel-bairro" class="form-select mb-3 border-0 py-3 text-muted fw-bold">
+                        <option value="">Selecione o Bairro</option>
+                        <option value="Vila Nova">Vila Nova</option>
+                        <option value="Cidade Jardim">Cidade Jardim</option>
+                        <option value="Setor Norte">Setor Norte</option>
+                        <option value="Bela Vista">Bela Vista</option>
+                        <option value="São Pedro">São Pedro</option>
+                        <option value="Tiradentes">Tiradentes</option>
+                        <option value="Inconfidentes">Inconfidentes</option>
+                        <option value="Setor Oeste">Setor Oeste</option>
+                        <option value="Cristo Rei">Cristo Rei</option>
+                        <option value="Setor Sul">Setor Sul</option>
+                    </select>
 
-                                        <div class="col-md-3">
-                                            <div class="card bg-light border-0 h-100 shadow-sm">
-                                                <div class="card-header bg-success text-white fw-bold text-center">PRODUTIVIDADE (AGENTE)</div>
-                                                <ul class="list-group list-group-flush">
-                                                    {% for ag in rel.lista_agentes %}
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
-                                                        <small><i class="fa-solid fa-user-check me-1 text-success"></i> {{ ag.nome }}</small>
-                                                        <span class="badge bg-success rounded-pill">{{ ag.qtd }}</span>
-                                                    </li>
-                                                    {% empty %}
-                                                    <li class="list-group-item bg-transparent text-muted text-center"><small>Nenhum agente.</small></li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="col-md-3">
-                                            <div class="card bg-light border-0 h-100 shadow-sm">
-                                                <div class="card-header bg-warning text-dark fw-bold text-center">SITUAÇÃO DA VISITA</div>
-                                                <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Inspecionados</small> <span class="badge bg-success rounded-pill">{{ rel.N }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Fechados</small> <span class="badge bg-dark rounded-pill">{{ rel.F }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Recusados</small> <span class="badge bg-danger rounded-pill">{{ rel.Rec }}</span></li>
-                                                </ul>
-                                                
-                                                <div class="card-header bg-danger text-white fw-bold text-center mt-3">AÇÕES (FOCOS)</div>
-                                                <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-danger fw-bold"><small><i class="fa-solid fa-vial-virus"></i> Tubitos</small> <span class="badge bg-danger rounded-pill">{{ rel.tubitos }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-success fw-bold"><small><i class="fa-solid fa-trash-can"></i> Eliminados</small> <span class="badge bg-success rounded-pill">{{ rel.eliminados }}</span></li>
-                                                </ul>
-                                            </div>
-                                        </div>
+                    <select id="rel-semana" class="form-select mb-3 border-0 py-3 text-muted fw-bold">
+                        <option value="">Selecione a Semana Epidemiológica</option>
+                        </select>
 
-                                        <div class="col-md-3">
-                                            <div class="card bg-light border-0 h-100 shadow-sm">
-                                                <div class="card-header bg-info text-dark fw-bold text-center">DEPÓSITOS VISTOS</div>
-                                                <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>A1 (Caixa d'água)</small> <span class="badge bg-dark rounded-pill">{{ rel.A1 }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>A2 (Armazenamentos)</small> <span class="badge bg-dark rounded-pill">{{ rel.A2 }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>B (Pequenos)</small> <span class="badge bg-dark rounded-pill">{{ rel.B }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>C (Fixos)</small> <span class="badge bg-dark rounded-pill">{{ rel.C }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>D1 (Pneus)</small> <span class="badge bg-dark rounded-pill">{{ rel.D1 }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>D2 (Lixo/Sucata)</small> <span class="badge bg-dark rounded-pill">{{ rel.D2 }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>E (Natural)</small> <span class="badge bg-dark rounded-pill">{{ rel.E }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2 fw-bold border-top border-secondary">TOTAL <span class="badge bg-info text-dark rounded-pill">{{ rel.total_depositos }}</span></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="text-end mt-4">
-                                        <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print me-2"></i> Imprimir Este Boletim</button>
-                                    </div>
+                    <label class="text-muted small ms-2">Tipo de Relatório</label>
+                    <select id="rel-tipo" class="form-select mb-4 border-0 py-3 text-dark fw-bold">
+                        <option value="Rotina Geral (Inclui PE)">Rotina Geral (Inclui PE)</option>
+                        <option value="Apenas PE">Apenas Pontos Estratégicos (PE)</option>
+                    </select>
 
-                                </div>
+                    <button class="btn-calcular w-100 py-3" onclick="gerarFechamentoJS()">
+                        <i class="fa-solid fa-calculator me-2"></i> Calcular Fechamento
+                    </button>
+                </div>
+
+                <div id="resultado-relatorio" style="display: none;">
+                    <div class="titulo-relatorio mb-4">
+                        Vila Rica - MT | Bairro: <span id="lbl-bairro"></span> | Semana: <span id="lbl-semana"></span><br>
+                        Tipo: <span id="lbl-tipo"></span>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card-relatorio">
+                                <h5>Nº Imóveis Trabalhados por Tipo</h5>
+                                <div class="linha-rel"><span>Residência</span><span class="valor" id="r-R">0</span></div>
+                                <div class="linha-rel"><span>Comércio</span><span class="valor" id="r-C">0</span></div>
+                                <div class="linha-rel"><span>Terreno Baldio (TB)</span><span class="valor" id="r-TB">0</span></div>
+                                <div class="linha-rel"><span>Ponto Estratégico (PE)</span><span class="valor" id="r-PE">0</span></div>
+                                <div class="linha-rel"><span>Outro</span><span class="valor" id="r-Outro">0</span></div>
+                                <div class="linha-rel total"><span>TOTAL GERAL</span><span class="valor" id="r-TotalImoveis">0</span></div>
+                            </div>
+                            
+                            <div class="card-relatorio">
+                                <h5>Produtividade por Agente</h5>
+                                <div id="lista-agentes"></div>
                             </div>
                         </div>
-                        {% empty %}
-                        <div class="text-center py-5 text-muted">
-                            <i class="fa-solid fa-chart-bar fa-4x mb-3 text-light"></i>
-                            <h5>Ainda não há dados para gerar relatórios.</h5>
+
+                        <div class="col-md-6 col-lg-4">
+                            <div class="card-relatorio">
+                                <h5>Situação / Pendências</h5>
+                                <div class="linha-rel"><span>Inspecionados (Trat. Focal)</span><span class="valor text-success" id="r-N">0</span></div>
+                                <div class="linha-rel"><span>Fechados</span><span class="valor text-dark" id="r-F">0</span></div>
+                                <div class="linha-rel"><span>Recusados</span><span class="valor text-danger" id="r-Rec">0</span></div>
+                            </div>
+
+                            <div class="card-relatorio">
+                                <h5>Ações (Focos)</h5>
+                                <div class="linha-rel"><span class="text-danger fw-bold"><i class="fa-solid fa-vial-virus"></i> Tubitos Coletados</span><span class="valor text-danger" id="r-Tubitos">0</span></div>
+                                <div class="linha-rel"><span class="text-success fw-bold"><i class="fa-solid fa-trash-can"></i> Dep. Eliminados</span><span class="valor text-success" id="r-Eliminados">0</span></div>
+                            </div>
                         </div>
-                        {% endfor %}
+
+                        <div class="col-md-12 col-lg-4">
+                            <div class="card-relatorio">
+                                <h5>Depósitos Inspecionados</h5>
+                                <div class="linha-rel"><span>A1 (Caixa d'água)</span><span class="valor" id="r-A1">0</span></div>
+                                <div class="linha-rel"><span>A2 (Armazenamentos)</span><span class="valor" id="r-A2">0</span></div>
+                                <div class="linha-rel"><span>B (Pequenos)</span><span class="valor" id="r-B">0</span></div>
+                                <div class="linha-rel"><span>C (Fixos)</span><span class="valor" id="r-Cdep">0</span></div>
+                                <div class="linha-rel"><span>D1 (Pneus)</span><span class="valor" id="r-D1">0</span></div>
+                                <div class="linha-rel"><span>D2 (Lixo/Sucata)</span><span class="valor" id="r-D2">0</span></div>
+                                <div class="linha-rel"><span>E (Natural)</span><span class="valor" id="r-E">0</span></div>
+                                <div class="linha-rel total"><span>TOTAL INSPECIONADO</span><span class="valor" id="r-TotalDep">0</span></div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -366,7 +365,116 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
     <script>
+        // 1. Preenche o dropdown de semanas (1 a 52)
+        const selectSemana = document.getElementById('rel-semana');
+        for(let i=1; i<=52; i++) {
+            let option = document.createElement('option');
+            option.value = i;
+            option.text = `Semana ${i}`;
+            selectSemana.appendChild(option);
+        }
+
+        // 2. Recebe o pacote de visitas cru do servidor Python
+        const visitasDB = JSON.parse('{{ visitas_json|escapejs }}');
+
+        // 3. A Função que calcula tudo no clique do botão
+        function gerarFechamentoJS() {
+            const bairro = document.getElementById('rel-bairro').value;
+            const semana = document.getElementById('rel-semana').value;
+            const tipoRelatorio = document.getElementById('rel-tipo').value;
+
+            if (!bairro || !semana) {
+                alert('Atenção: Selecione o Bairro e a Semana Epidemiológica para gerar o relatório!');
+                return;
+            }
+
+            // Zera todos os contadores
+            let contadores = {
+                R: 0, C: 0, TB: 0, PE: 0, Outros: 0,
+                N: 0, F: 0, Rec: 0,
+                A1: 0, A2: 0, B: 0, C_dep: 0, D1: 0, D2: 0, E: 0,
+                tubitos: 0, eliminados: 0
+            };
+            let agentes = {};
+
+            // Filtra e soma a matemática
+            visitasDB.forEach(v => {
+                if (v.bairro === bairro && v.semana === semana) {
+                    if (tipoRelatorio === 'Apenas PE' && v.tipo !== 'PE') return;
+
+                    // Soma Tipo de Imóvel
+                    if (v.tipo === 'R') contadores.R++;
+                    else if (v.tipo === 'C') contadores.C++;
+                    else if (v.tipo === 'TB') contadores.TB++;
+                    else if (v.tipo === 'PE') contadores.PE++;
+                    else contadores.Outros++;
+
+                    // Soma Status
+                    if (v.status === 'N') contadores.N++;
+                    else if (v.status === 'F') contadores.F++;
+                    else if (v.status === 'R') contadores.Rec++;
+
+                    // Soma Depósitos e Amostras
+                    contadores.A1 += v.dep_A1; contadores.A2 += v.dep_A2;
+                    contadores.B += v.dep_B; contadores.C_dep += v.dep_C;
+                    contadores.D1 += v.dep_D1; contadores.D2 += v.dep_D2;
+                    contadores.E += v.dep_E;
+                    contadores.tubitos += v.tubitos;
+                    contadores.eliminados += v.eliminados;
+
+                    // Conta a produtividade do Agente
+                    if (!agentes[v.agente]) agentes[v.agente] = 0;
+                    agentes[v.agente]++;
+                }
+            });
+
+            // Atualiza os Textos na Tela
+            document.getElementById('lbl-bairro').innerText = bairro;
+            document.getElementById('lbl-semana').innerText = semana;
+            document.getElementById('lbl-tipo').innerText = tipoRelatorio.toUpperCase();
+
+            document.getElementById('r-R').innerText = contadores.R;
+            document.getElementById('r-C').innerText = contadores.C;
+            document.getElementById('r-TB').innerText = contadores.TB;
+            document.getElementById('r-PE').innerText = contadores.PE;
+            document.getElementById('r-Outro').innerText = contadores.Outros;
+            document.getElementById('r-TotalImoveis').innerText = (contadores.R + contadores.C + contadores.TB + contadores.PE + contadores.Outros);
+
+            document.getElementById('r-N').innerText = contadores.N;
+            document.getElementById('r-F').innerText = contadores.F;
+            document.getElementById('r-Rec').innerText = contadores.Rec;
+
+            document.getElementById('r-A1').innerText = contadores.A1;
+            document.getElementById('r-A2').innerText = contadores.A2;
+            document.getElementById('r-B').innerText = contadores.B;
+            document.getElementById('r-Cdep').innerText = contadores.C_dep;
+            document.getElementById('r-D1').innerText = contadores.D1;
+            document.getElementById('r-D2').innerText = contadores.D2;
+            document.getElementById('r-E').innerText = contadores.E;
+            document.getElementById('r-TotalDep').innerText = (contadores.A1 + contadores.A2 + contadores.B + contadores.C_dep + contadores.D1 + contadores.D2 + contadores.E);
+
+            document.getElementById('r-Tubitos').innerText = contadores.tubitos;
+            document.getElementById('r-Eliminados').innerText = contadores.eliminados;
+
+            // Lista os Agentes que trabalharam
+            const divAgentes = document.getElementById('lista-agentes');
+            divAgentes.innerHTML = '';
+            let temAgente = false;
+            for (const [nome, qtd] of Object.entries(agentes)) {
+                temAgente = true;
+                divAgentes.innerHTML += `<div class="linha-rel"><span><i class="fa-solid fa-user text-muted me-1"></i> ${nome}</span><span class="badge bg-primary rounded-pill">${qtd}</span></div>`;
+            }
+            if (!temAgente) divAgentes.innerHTML = '<div class="text-muted py-2"><small>Nenhum agente registrou visitas neste filtro.</small></div>';
+
+            // Mostra o resultado
+            document.getElementById('resultado-relatorio').style.display = 'block';
+        }
+
+        // ==========================================
+        // MAPA DO DASHBOARD
+        // ==========================================
         document.addEventListener('DOMContentLoaded', function() {
             var map = L.map('map').setView([-10.0116, -51.1186], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);

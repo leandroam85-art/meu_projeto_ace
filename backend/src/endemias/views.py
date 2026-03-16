@@ -62,69 +62,26 @@ def dashboard_supervisor(request):
     visitas_pe = Visita.objects.filter(imovel__tipo='PE').select_related('imovel', 'agente').order_by('-data_visita')[:500]
     todas_visitas = Visita.objects.select_related('imovel', 'agente').order_by('imovel__bairro', 'imovel__quarteirao', '-data_visita')
     
-    # ---> NOVO: GERADOR DE RELATÓRIOS (POR SEMANA, BAIRRO E AGENTE) <---
-    relatorios_dict = {}
+    # ---> NOVO: PACOTE DE DADOS PARA O GERADOR DE RELATÓRIOS DO NAVEGADOR <---
+    visitas_json_list = []
     for v in todas_visitas:
-        sem = str(getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1)))
-        bairro = getattr(v.imovel, 'bairro', 'Sem Bairro') if v.imovel else 'Sem Bairro'
-        agente_nome = getattr(v.agente, 'nome', 'Sem Agente') if v.agente else 'Sem Agente'
-        
-        chave = f"{sem}_{bairro}"
-        
-        if chave not in relatorios_dict:
-            relatorios_dict[chave] = {
-                'semana': sem, 'bairro': bairro,
-                'R': 0, 'C': 0, 'TB': 0, 'PE': 0, 'Outros': 0, 'total_imoveis': 0,
-                'N': 0, 'F': 0, 'Rec': 0,
-                'A1': 0, 'A2': 0, 'B': 0, 'C': 0, 'D1': 0, 'D2': 0, 'E': 0, 'total_depositos': 0,
-                'tubitos': 0, 'eliminados': 0,
-                'agentes': {} # Contagem individual por agente
-            }
-        
-        r = relatorios_dict[chave]
-        
-        # Conta tipo de Imóvel
-        tipo = getattr(v.imovel, 'tipo', 'R') if v.imovel else 'R'
-        if tipo == 'R': r['R'] += 1
-        elif tipo == 'C': r['C'] += 1
-        elif tipo == 'TB': r['TB'] += 1
-        elif tipo == 'PE': r['PE'] += 1
-        else: r['Outros'] += 1
-        r['total_imoveis'] += 1
-        
-        # Conta Status
-        st = getattr(v, 'status', 'N')
-        if st == 'N': r['N'] += 1
-        elif st == 'F': r['F'] += 1
-        elif st == 'R': r['Rec'] += 1
-        
-        # Conta Depósitos e Amostras
-        a1 = getattr(v, 'dep_A1', 0) or 0; r['A1'] += a1
-        a2 = getattr(v, 'dep_A2', 0) or 0; r['A2'] += a2
-        b = getattr(v, 'dep_B', 0) or 0; r['B'] += b
-        c = getattr(v, 'dep_C', 0) or 0; r['C'] += c
-        d1 = getattr(v, 'dep_D1', 0) or 0; r['D1'] += d1
-        d2 = getattr(v, 'dep_D2', 0) or 0; r['D2'] += d2
-        e = getattr(v, 'dep_E', 0) or 0; r['E'] += e
-        r['total_depositos'] += (a1 + a2 + b + c + d1 + d2 + e)
-        
-        r['tubitos'] += getattr(v, 'amostras_coletadas', 0) or 0
-        r['eliminados'] += getattr(v, 'depositos_eliminados', 0) or 0
-        
-        # Conta a produtividade do Agente
-        if agente_nome not in r['agentes']:
-            r['agentes'][agente_nome] = 0
-        r['agentes'][agente_nome] += 1
-
-    # Formata os dados para o HTML e ordena da semana mais nova pra mais velha
-    for r in relatorios_dict.values():
-        r['lista_agentes'] = [{'nome': k, 'qtd': v} for k, v in r['agentes'].items()]
-        
-    def pega_semana(s):
-        try: return int(s)
-        except: return 0
-
-    lista_relatorios = sorted(relatorios_dict.values(), key=lambda x: (pega_semana(x['semana']), x['bairro']), reverse=True)
+        visitas_json_list.append({
+            'semana': str(getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1))),
+            'bairro': getattr(v.imovel, 'bairro', 'Sem Bairro') if v.imovel else 'Sem Bairro',
+            'tipo': getattr(v.imovel, 'tipo', 'R') if v.imovel else 'R',
+            'status': getattr(v, 'status', 'N'),
+            'dep_A1': getattr(v, 'dep_A1', 0) or 0,
+            'dep_A2': getattr(v, 'dep_A2', 0) or 0,
+            'dep_B': getattr(v, 'dep_B', 0) or 0,
+            'dep_C': getattr(v, 'dep_C', 0) or 0,
+            'dep_D1': getattr(v, 'dep_D1', 0) or 0,
+            'dep_D2': getattr(v, 'dep_D2', 0) or 0,
+            'dep_E': getattr(v, 'dep_E', 0) or 0,
+            'tubitos': getattr(v, 'amostras_coletadas', 0) or 0,
+            'eliminados': getattr(v, 'depositos_eliminados', 0) or 0,
+            'agente': getattr(v.agente, 'nome', 'Sem Agente') if v.agente else 'Sem Agente'
+        })
+    visitas_json = json.dumps(visitas_json_list)
 
     marcadores = []
     for visita in visitas_com_foco:
@@ -143,7 +100,7 @@ def dashboard_supervisor(request):
         'total_visitas': total_visitas, 'focos_dengue': focos_dengue, 'agentes_ativos': agentes_ativos,
         'agentes_lista': agentes_lista, 'marcadores_json': marcadores_json,
         'visitas_rotina': visitas_rotina, 'visitas_pe': visitas_pe,
-        'todas_visitas': todas_visitas, 'lista_relatorios': lista_relatorios, 
+        'todas_visitas': todas_visitas, 'visitas_json': visitas_json, # Mandando o pacote!
     }
     return render(request, 'dashboard.html', contexto)
 
