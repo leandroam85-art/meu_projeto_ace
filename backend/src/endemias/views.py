@@ -13,7 +13,6 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from django.contrib.gis.geos import Point
 
 @login_required(login_url='/admin/login/')
 def dashboard_supervisor(request):
@@ -22,7 +21,7 @@ def dashboard_supervisor(request):
     # MOTOR DE GERENCIAMENTO (CADASTRAR, EDITAR, EXCLUIR)
     # ==========================================
     if request.method == 'POST':
-        acao = request.POST.get('acao') # Descobre qual botão o supervisor apertou
+        acao = request.POST.get('acao') 
 
         # AÇÃO 1: CADASTRAR NOVO AGENTE
         if acao == 'cadastrar':
@@ -43,7 +42,7 @@ def dashboard_supervisor(request):
             nova_senha = request.POST.get('nova_senha')
             try:
                 agente = Agente.objects.get(id=agente_id)
-                agente.user.set_password(nova_senha) # Troca a senha com segurança
+                agente.user.set_password(nova_senha) 
                 agente.user.save()
                 messages.success(request, f'Senha do agente "{agente.nome}" redefinida com sucesso!')
             except Exception as e:
@@ -54,7 +53,6 @@ def dashboard_supervisor(request):
             agente_id = request.POST.get('agente_id')
             try:
                 agente = Agente.objects.get(id=agente_id)
-                # Excluir o User já apaga o Agente e o Token dele automaticamente (Cascade)
                 if agente.user:
                     agente.user.delete()
                 else:
@@ -68,7 +66,7 @@ def dashboard_supervisor(request):
     # ==========================================
     total_visitas = Visita.objects.count()
     agentes_ativos = Agente.objects.count()
-    agentes_lista = Agente.objects.all().order_by('nome') # Pega a lista para a tabela
+    agentes_lista = Agente.objects.all().order_by('nome') 
 
     focos_dengue = Visita.objects.filter(amostras_coletadas__gt=0).count()
     visitas_com_foco = Visita.objects.filter(amostras_coletadas__gt=0)
@@ -76,13 +74,14 @@ def dashboard_supervisor(request):
     marcadores = []
     for visita in visitas_com_foco:
         try:
-            lat = visita.imovel.latitude 
-            lng = visita.imovel.longitude
-            marcadores.append({
-                'lat': float(lat),
-                'lng': float(lng),
-                'descricao': f"Amostras coletadas: {visita.amostras_coletadas} <br>Data: {visita.data_visita.strftime('%d/%m/%Y')}"
-            })
+            lat = getattr(visita.imovel, 'latitude', None)
+            lng = getattr(visita.imovel, 'longitude', None)
+            if lat and lng:
+                marcadores.append({
+                    'lat': float(lat),
+                    'lng': float(lng),
+                    'descricao': f"Amostras coletadas: {visita.amostras_coletadas} <br>Data: {visita.data_visita.strftime('%d/%m/%Y')}"
+                })
         except Exception:
             continue
 
@@ -92,7 +91,7 @@ def dashboard_supervisor(request):
         'total_visitas': total_visitas,
         'focos_dengue': focos_dengue,
         'agentes_ativos': agentes_ativos,
-        'agentes_lista': agentes_lista, # Envia a lista para o HTML
+        'agentes_lista': agentes_lista, 
         'marcadores_json': marcadores_json,
     }
 
@@ -105,7 +104,6 @@ def dashboard_supervisor(request):
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def login_personalizado(request):
-    print("🕵️ DADOS RECEBIDOS DO APLICATIVO:", request.data)
     usuario = request.data.get('username') or request.data.get('usuario') or request.data.get('user')
     senha = request.data.get('password') or request.data.get('senha')
     
@@ -120,23 +118,42 @@ def login_personalizado(request):
         return Response({"erro": "Credenciais inválidas."}, status=400)
 
 # ==========================================
-# API DE IMÓVEIS (Para o App baixar e enviar)
+# API DE IMÓVEIS BLINDADA
 # ==========================================
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([AllowAny])
 def api_imoveis(request, pk=None):
     if request.method == 'GET':
         imoveis = Imovel.objects.all()
-        dados = [{"id": i.id, "endereco": i.endereco, "numero": i.numero, "bairro": i.bairro, "quarteirao": i.quarteirao, "tipo": i.tipo} for i in imoveis]
+        dados = []
+        for i in imoveis:
+            # Embala a latitude e longitude pro formato que o celular entende
+            loc = ""
+            lat = getattr(i, 'latitude', None)
+            lng = getattr(i, 'longitude', None)
+            if lat and lng:
+                loc = f"POINT({lng} {lat})"
+
+            dados.append({
+                "id": i.id, 
+                "endereco": getattr(i, 'endereco', 'S/N'), 
+                "numero": getattr(i, 'numero', 'S/N'), 
+                "bairro": getattr(i, 'bairro', ''), 
+                "quarteirao": getattr(i, 'quarteirao', ''), 
+                "tipo": getattr(i, 'tipo', 'R'),
+                "localizacao": loc
+            })
         return Response(dados)
         
     elif request.method == 'POST':
+        # Recebe o POINT do celular e quebra em latitude e longitude limpas
         loc_str = request.data.get('localizacao', '')
-        ponto = Point(0, 0)
+        lat, lng = 0.0, 0.0
         if loc_str.startswith('POINT'):
             try:
                 coords = loc_str.replace('POINT(', '').replace(')', '').split()
-                ponto = Point(float(coords[0]), float(coords[1]))
+                lng = float(coords[0])
+                lat = float(coords[1])
             except: pass
         
         novo = Imovel.objects.create(
@@ -145,7 +162,8 @@ def api_imoveis(request, pk=None):
             bairro=request.data.get('bairro', ''),
             quarteirao=request.data.get('quarteirao', ''),
             tipo=request.data.get('tipo', 'R'),
-            localizacao=ponto
+            latitude=lat,     
+            longitude=lng     
         )
         return Response({"id": novo.id}, status=201)
 
@@ -160,7 +178,7 @@ def api_imoveis(request, pk=None):
         return Response({"id": imovel.id}, status=200)
 
 # ==========================================
-# API DE VISITAS (Para o App baixar e enviar)
+# API DE VISITAS BLINDADA
 # ==========================================
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([AllowAny])
@@ -169,13 +187,19 @@ def api_visitas(request, pk=None):
         visitas = Visita.objects.all()
         dados = []
         for v in visitas:
+            data_v = getattr(v, 'data_visita', None)
             dados.append({
-                "id": v.id, "imovel": v.imovel.id, "status": v.status, 
-                "semana_epidemiologica": v.semana_epidemiologica,
-                "data_visita": v.data_visita.isoformat() if v.data_visita else None,
-                "amostras_coletadas": v.amostras_coletadas, "quantidade_larvas": v.quantidade_larvas,
-                "dep_A1": v.dep_A1, "dep_A2": v.dep_A2, "dep_B": v.dep_B, "dep_C": v.dep_C, 
-                "dep_D1": v.dep_D1, "dep_D2": v.dep_D2, "dep_E": v.dep_E
+                "id": v.id, 
+                "imovel": v.imovel.id if hasattr(v, 'imovel') and v.imovel else None, 
+                "status": getattr(v, 'status', 'N'), 
+                "semana_epidemiologica": getattr(v, 'semana_epidemiologica', 1),
+                "data_visita": data_v.isoformat() if data_v else None,
+                "amostras_coletadas": getattr(v, 'amostras_coletadas', 0), 
+                "quantidade_larvas": getattr(v, 'quantidade_larvas', 0),
+                "dep_A1": getattr(v, 'dep_A1', 0), "dep_A2": getattr(v, 'dep_A2', 0), 
+                "dep_B": getattr(v, 'dep_B', 0), "dep_C": getattr(v, 'dep_C', 0), 
+                "dep_D1": getattr(v, 'dep_D1', 0), "dep_D2": getattr(v, 'dep_D2', 0), 
+                "dep_E": getattr(v, 'dep_E', 0)
             })
         return Response(dados)
         
@@ -192,21 +216,24 @@ def api_visitas(request, pk=None):
                 semana_epidemiologica=request.data.get('semana_epidemiologica', 1),
                 amostras_coletadas=request.data.get('amostras_coletadas', 0),
                 quantidade_larvas=request.data.get('quantidade_larvas', 0),
-                depositos_eliminados=request.data.get('depositos_eliminados', 0),
-                dep_A1=request.data.get('dep_A1', 0), dep_A2=request.data.get('dep_A2', 0),
-                dep_B=request.data.get('dep_B', 0), dep_C=request.data.get('dep_C', 0),
-                dep_D1=request.data.get('dep_D1', 0), dep_D2=request.data.get('dep_D2', 0),
-                dep_E=request.data.get('dep_E', 0)
+                depositos_eliminados=request.data.get('depositos_eliminados', 0)
             )
+            
+            # Salva os depósitos sem quebrar
+            for campo in ['dep_A1', 'dep_A2', 'dep_B', 'dep_C', 'dep_D1', 'dep_D2', 'dep_E']:
+                if hasattr(nova, campo):
+                    setattr(nova, campo, request.data.get(campo, 0))
+            nova.save()
+            
             return Response({"id": nova.id}, status=201)
         except Exception as e:
             return Response({"erro": str(e)}, status=400)
             
     elif request.method == 'PUT' and pk:
         visita = Visita.objects.get(id=pk)
-        visita.status = request.data.get('status', visita.status)
-        visita.amostras_coletadas = request.data.get('amostras_coletadas', visita.amostras_coletadas)
-        visita.quantidade_larvas = request.data.get('quantidade_larvas', visita.quantidade_larvas)
-        visita.depositos_eliminados = request.data.get('depositos_eliminados', visita.depositos_eliminados)
+        visita.status = request.data.get('status', getattr(visita, 'status', 'N'))
+        visita.amostras_coletadas = request.data.get('amostras_coletadas', getattr(visita, 'amostras_coletadas', 0))
+        visita.quantidade_larvas = request.data.get('quantidade_larvas', getattr(visita, 'quantidade_larvas', 0))
+        visita.depositos_eliminados = request.data.get('depositos_eliminados', getattr(visita, 'depositos_eliminados', 0))
         visita.save()
         return Response({"id": visita.id}, status=200)
