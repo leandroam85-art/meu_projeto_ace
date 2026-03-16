@@ -9,7 +9,6 @@ from urllib.parse import urlparse
 # =========================
 # CAMINHOS E SEGURANÇA
 # =========================
-
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = 'django-insecure-&p=l9_%+2$x&x%ebp@_^!saqcb&mlzlb6@p5s6ze*v6!ji2^^l'
@@ -25,7 +24,6 @@ CSRF_TRUSTED_ORIGINS = [
 # =========================
 # APLICATIVOS E MIDDLEWARE
 # =========================
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -79,7 +77,6 @@ WSGI_APPLICATION = 'config.wsgi.application'
 # =========================
 # BANCO DE DADOS (POSTGIS)
 # =========================
-
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
@@ -109,7 +106,6 @@ else:
 # =========================
 # VALIDAÇÃO DE SENHAS
 # =========================
-
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
     {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
@@ -118,24 +114,21 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 # =========================
-# INTERNACIONALIZAÇÃO ESTÁVEL
+# INTERNACIONALIZAÇÃO E ROTAS
 # =========================
-
 LANGUAGE_CODE = 'pt-br'
 TIME_ZONE = 'America/Cuiaba'
-
-# Desligado para evitar o erro 'pt-br is not a registered namespace' no Admin
 USE_I18N = False 
 USE_TZ = True
+
+# O PULO DO GATO: Impede o Django de forçar a barra (/) no final e perder a senha do app
+APPEND_SLASH = False
 
 # =========================
 # CONFIGURAÇÕES ADICIONAIS
 # =========================
-
 LOGIN_URL = '/admin/login/'
-
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
