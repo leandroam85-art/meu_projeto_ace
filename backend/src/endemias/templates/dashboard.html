@@ -23,13 +23,13 @@
         .icon-box { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
         #map { height: 450px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 2px solid #fff; }
         
-        /* Estilo mágico para a hora de imprimir o relatório */
         @media print {
             .sidebar, .btn { display: none !important; }
             .main-content { margin-left: 0; padding: 0; }
             body { background-color: white; }
             .accordion-button::after { display: none !important; }
             .accordion-collapse { display: block !important; }
+            .card { break-inside: avoid; }
         }
     </style>
 </head>
@@ -216,71 +216,88 @@
                 </div>
                 
                 <div class="card stat-card bg-white p-4 border-start border-primary border-4">
-                    <p class="text-muted mb-4"><i class="fa-solid fa-info-circle me-1"></i> Os dados estão consolidados por Semana Epidemiológica. Use para preencher o Boletim do Ministério da Saúde.</p>
+                    <p class="text-muted mb-4"><i class="fa-solid fa-info-circle me-1"></i> Os dados estão consolidados por <b>Semana Epidemiológica</b> e por <b>Bairro</b>, incluindo a produtividade de cada Agente.</p>
                     
                     <div class="accordion shadow-sm" id="accordionRelatorios">
                         {% for rel in lista_relatorios %}
                         <div class="accordion-item border-0 border-bottom mb-3">
                             <h2 class="accordion-header" id="headingRel-{{ forloop.counter }}">
                                 <button class="accordion-button collapsed fw-bold border border-primary rounded" type="button" data-bs-toggle="collapse" data-bs-target="#collapseRel-{{ forloop.counter }}" style="background-color: #e3f2fd; color: #0d6efd;">
-                                    <i class="fa-solid fa-calendar-week me-2"></i> Semana Epidemiológica: {{ rel.semana }}
-                                    <span class="badge bg-primary ms-3 rounded-pill">{{ rel.total_imoveis }} Imóveis Visitados</span>
+                                    <i class="fa-solid fa-map-location-dot me-2 text-dark"></i> Bairro: <span class="text-dark me-3 ms-1">{{ rel.bairro }}</span>
+                                    <i class="fa-solid fa-calendar-week me-1"></i> Semana: <span class="me-3 ms-1">{{ rel.semana }}</span>
+                                    <span class="badge bg-primary rounded-pill">{{ rel.total_imoveis }} Visitas no Bairro</span>
                                 </button>
                             </h2>
                             <div id="collapseRel-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#accordionRelatorios">
                                 <div class="accordion-body p-4 bg-white border border-top-0 border-primary rounded-bottom">
                                     
-                                    <div class="row g-4">
-                                        <div class="col-md-4">
+                                    <div class="row g-3">
+                                        <div class="col-md-3">
                                             <div class="card bg-light border-0 h-100 shadow-sm">
-                                                <div class="card-header bg-secondary text-white fw-bold text-center">Nº IMÓVEIS POR TIPO</div>
+                                                <div class="card-header bg-secondary text-white fw-bold text-center">Nº IMÓVEIS (TIPO)</div>
                                                 <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">Residência (R) <span class="badge bg-dark rounded-pill">{{ rel.R }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">Comércio (C) <span class="badge bg-dark rounded-pill">{{ rel.C }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">Terreno Baldio (TB) <span class="badge bg-dark rounded-pill">{{ rel.TB }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">Ponto Estratégico (PE) <span class="badge bg-dark rounded-pill">{{ rel.PE }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">Outros <span class="badge bg-dark rounded-pill">{{ rel.Outros }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent fw-bold border-top border-secondary">TOTAL GERAL <span class="badge bg-primary rounded-pill">{{ rel.total_imoveis }}</span></li>
-                                                </ul>
-                                            </div>
-                                        </div>
-                                        
-                                        <div class="col-md-4">
-                                            <div class="card bg-light border-0 h-100 shadow-sm">
-                                                <div class="card-header bg-warning text-dark fw-bold text-center">SITUAÇÃO / PENDÊNCIAS</div>
-                                                <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">Inspecionados (Trat. Focal) <span class="badge bg-success rounded-pill">{{ rel.N }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">Fechados <span class="badge bg-dark rounded-pill">{{ rel.F }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">Recusados <span class="badge bg-danger rounded-pill">{{ rel.Rec }}</span></li>
-                                                </ul>
-                                                
-                                                <div class="card-header bg-danger text-white fw-bold text-center mt-3">AÇÕES EXECUTADAS</div>
-                                                <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-danger fw-bold"><i class="fa-solid fa-vial-virus"></i> Amostras (Tubitos) <span class="badge bg-danger rounded-pill">{{ rel.tubitos }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-success fw-bold"><i class="fa-solid fa-trash-can"></i> Dep. Eliminados <span class="badge bg-success rounded-pill">{{ rel.eliminados }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Residência (R)</small> <span class="badge bg-dark rounded-pill">{{ rel.R }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Comércio (C)</small> <span class="badge bg-dark rounded-pill">{{ rel.C }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Terreno Baldio (TB)</small> <span class="badge bg-dark rounded-pill">{{ rel.TB }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Ponto Estratégico (PE)</small> <span class="badge bg-dark rounded-pill">{{ rel.PE }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Outros</small> <span class="badge bg-dark rounded-pill">{{ rel.Outros }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent fw-bold border-top border-secondary">TOTAL <span class="badge bg-primary rounded-pill">{{ rel.total_imoveis }}</span></li>
                                                 </ul>
                                             </div>
                                         </div>
 
-                                        <div class="col-md-4">
+                                        <div class="col-md-3">
                                             <div class="card bg-light border-0 h-100 shadow-sm">
-                                                <div class="card-header bg-info text-dark fw-bold text-center">DEPÓSITOS INSPECIONADOS</div>
+                                                <div class="card-header bg-success text-white fw-bold text-center">PRODUTIVIDADE (AGENTE)</div>
                                                 <ul class="list-group list-group-flush">
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">A1 (Caixa d'água) <span class="badge bg-dark rounded-pill">{{ rel.A1 }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">A2 (Armazenamentos) <span class="badge bg-dark rounded-pill">{{ rel.A2 }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">B (Pequenos depósitos) <span class="badge bg-dark rounded-pill">{{ rel.B }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">C (Depósitos fixos) <span class="badge bg-dark rounded-pill">{{ rel.C }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">D1 (Pneus) <span class="badge bg-dark rounded-pill">{{ rel.D1 }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">D2 (Lixo/Sucata) <span class="badge bg-dark rounded-pill">{{ rel.D2 }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">E (Natural) <span class="badge bg-dark rounded-pill">{{ rel.E }}</span></li>
-                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent fw-bold border-top border-secondary">TOTAL INSPECIONADO <span class="badge bg-info text-dark rounded-pill">{{ rel.total_depositos }}</span></li>
+                                                    {% for ag in rel.lista_agentes %}
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent">
+                                                        <small><i class="fa-solid fa-user-check me-1 text-success"></i> {{ ag.nome }}</small>
+                                                        <span class="badge bg-success rounded-pill">{{ ag.qtd }}</span>
+                                                    </li>
+                                                    {% empty %}
+                                                    <li class="list-group-item bg-transparent text-muted text-center"><small>Nenhum agente.</small></li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="col-md-3">
+                                            <div class="card bg-light border-0 h-100 shadow-sm">
+                                                <div class="card-header bg-warning text-dark fw-bold text-center">SITUAÇÃO DA VISITA</div>
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Inspecionados</small> <span class="badge bg-success rounded-pill">{{ rel.N }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Fechados</small> <span class="badge bg-dark rounded-pill">{{ rel.F }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent"><small>Recusados</small> <span class="badge bg-danger rounded-pill">{{ rel.Rec }}</span></li>
+                                                </ul>
+                                                
+                                                <div class="card-header bg-danger text-white fw-bold text-center mt-3">AÇÕES (FOCOS)</div>
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-danger fw-bold"><small><i class="fa-solid fa-vial-virus"></i> Tubitos</small> <span class="badge bg-danger rounded-pill">{{ rel.tubitos }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent text-success fw-bold"><small><i class="fa-solid fa-trash-can"></i> Eliminados</small> <span class="badge bg-success rounded-pill">{{ rel.eliminados }}</span></li>
+                                                </ul>
+                                            </div>
+                                        </div>
+
+                                        <div class="col-md-3">
+                                            <div class="card bg-light border-0 h-100 shadow-sm">
+                                                <div class="card-header bg-info text-dark fw-bold text-center">DEPÓSITOS VISTOS</div>
+                                                <ul class="list-group list-group-flush">
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>A1 (Caixa d'água)</small> <span class="badge bg-dark rounded-pill">{{ rel.A1 }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>A2 (Armazenamentos)</small> <span class="badge bg-dark rounded-pill">{{ rel.A2 }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>B (Pequenos)</small> <span class="badge bg-dark rounded-pill">{{ rel.B }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>C (Fixos)</small> <span class="badge bg-dark rounded-pill">{{ rel.C }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>D1 (Pneus)</small> <span class="badge bg-dark rounded-pill">{{ rel.D1 }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>D2 (Lixo/Sucata)</small> <span class="badge bg-dark rounded-pill">{{ rel.D2 }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2"><small>E (Natural)</small> <span class="badge bg-dark rounded-pill">{{ rel.E }}</span></li>
+                                                    <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent p-2 fw-bold border-top border-secondary">TOTAL <span class="badge bg-info text-dark rounded-pill">{{ rel.total_depositos }}</span></li>
                                                 </ul>
                                             </div>
                                         </div>
                                     </div>
                                     
                                     <div class="text-end mt-4">
-                                        <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print me-2"></i> Imprimir Semana {{ rel.semana }}</button>
+                                        <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print me-2"></i> Imprimir Este Boletim</button>
                                     </div>
 
                                 </div>
