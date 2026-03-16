@@ -16,7 +16,6 @@ from django.contrib.gis.geos import Point
 # CONVERSOR UNIVERSAL ANTI-CRASH
 # ==========================================
 def converte_seguro(modelo, campo, valor):
-    """Lê o banco de dados e formata o valor corretamente para nunca dar erro"""
     try:
         campo_db = modelo._meta.get_field(campo)
         if isinstance(campo_db, (models.IntegerField, models.FloatField, models.DecimalField)):
@@ -80,7 +79,6 @@ def dashboard_supervisor(request):
     marcadores = []
     for visita in visitas_com_foco:
         try:
-            # Tenta ler o mapa com segurança
             lat, lng = None, None
             if hasattr(visita.imovel, 'localizacao') and visita.imovel.localizacao:
                 lng = visita.imovel.localizacao.x
@@ -127,7 +125,7 @@ def login_personalizado(request):
         return Response({"erro": "Credenciais inválidas."}, status=400)
 
 # ==========================================
-# API DE IMÓVEIS (Corrigido o erro NULL do Render)
+# API DE IMÓVEIS
 # ==========================================
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([AllowAny])
@@ -165,18 +163,16 @@ def api_imoveis(request, pk=None):
                     ponto = Point(float(coords[0]), float(coords[1]))
                 except: pass
 
-            # Cria e força a injeção do ponto no banco (Sem usar hasattr)
             novo = Imovel.objects.create(
                 endereco=str(request.data.get('endereco', '')).strip(),
                 numero=str(request.data.get('numero', 'S/N')).strip() or 'S/N',
                 bairro=str(request.data.get('bairro', '')).strip(),
                 quarteirao=converte_seguro(Imovel, 'quarteirao', str(request.data.get('quarteirao', 0)).strip()),
                 tipo=str(request.data.get('tipo', 'R')).strip(),
-                localizacao=ponto # <--- A injeção direta resolve o erro do log!
+                localizacao=ponto 
             )
             return Response({"id": novo.id}, status=201)
         except Exception as e:
-            print("🚨 ERRO AO SALVAR IMÓVEL:", str(e))
             return Response({"erro": str(e)}, status=400)
 
     elif request.method == 'PUT' and pk:
@@ -189,7 +185,6 @@ def api_imoveis(request, pk=None):
                 try: setattr(imovel, campo, valor_seguro)
                 except: pass
             
-            # Atualiza o GPS se ele vier na edição
             loc_str = request.data.get('localizacao', '')
             if loc_str.startswith('POINT'):
                 try:
@@ -203,7 +198,7 @@ def api_imoveis(request, pk=None):
             return Response({"erro": str(e)}, status=400)
 
 # ==========================================
-# API DE VISITAS 
+# API DE VISITAS (Com Proteção de Agente ID)
 # ==========================================
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([AllowAny])
@@ -239,9 +234,22 @@ def api_visitas(request, pk=None):
                 return Response({"erro": "Imóvel não encontrado"}, status=400)
 
             nova = Visita(imovel=imovel)
+            
+            # --- O CORAÇÃO DO CONSERTO DO AGENTE AQUI 👇 ---
             agente_id = request.data.get('agente')
-            agente = Agente.objects.filter(id=agente_id).first() if agente_id else Agente.objects.first()
-            if agente: nova.agente = agente
+            agente = Agente.objects.filter(id=agente_id).first()
+            
+            if not agente:
+                # Se o ID não for achado, pega qualquer agente disponível para não travar
+                agente = Agente.objects.first()
+                
+            if not agente:
+                # Se o banco de dados não tiver absolutamente NENHUM agente, ele cria um fantasma na hora
+                u, _ = User.objects.get_or_create(username='temp_user')
+                agente, _ = Agente.objects.get_or_create(nome='Agente Temp', user=u)
+                
+            nova.agente = agente
+            # -----------------------------------------------
 
             for campo, valor in request.data.items():
                 alvo = campo
