@@ -1194,7 +1194,6 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
       body: FutureBuilder<List<dynamic>>(
         future: _carregarImoveis(),
         builder: (c, s) {
-          // --- CORREÇÃO AQUI: Removido o const que estava dando erro ---
           if (s.hasError)
             return Center(
               child: Column(
@@ -1308,9 +1307,9 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
                                         0)
                                     .compareTo(
                                       int.tryParse(
-                                            b['numero']?.toString() ?? '0',
-                                          ) ??
-                                          0,
+                                          b['numero']?.toString() ?? '0',
+                                        ) ??
+                                        0,
                                     ),
                           );
                           return Column(
@@ -2245,12 +2244,16 @@ class _TelaVisitaState extends State<TelaVisita> {
                   : () async {
                       setState(() => enviando = true);
                       try {
+                        String nomeAgenteCache = await DatabaseHelper.instance
+                            .lerCache('agente_logado') ?? "";
+
                         var d = {
                           "status": _status,
                           "imovel":
                               widget.visitaExistente?['imovel'] ??
                               widget.imovelId.toString(),
-                          "agente": int.parse(_agente.text),
+                          "agente_username": nomeAgenteCache,
+                          "agente": 1,
                           "amostras_coletadas": int.parse(
                             _tubitos.text.isEmpty ? '0' : _tubitos.text,
                           ),

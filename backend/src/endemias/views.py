@@ -25,7 +25,6 @@ def converte_seguro(modelo, campo, valor):
 def dashboard_supervisor(request):
     if request.method == 'POST':
         acao = request.POST.get('acao') 
-
         if acao == 'cadastrar':
             nome = request.POST.get('nome')
             username = request.POST.get('username')
@@ -56,34 +55,29 @@ def dashboard_supervisor(request):
     total_visitas = Visita.objects.count()
     agentes_ativos = Agente.objects.count()
     agentes_lista = Agente.objects.all().order_by('nome') 
-
     focos_dengue = Visita.objects.filter(amostras_coletadas__gt=0).count()
     visitas_com_foco = Visita.objects.filter(amostras_coletadas__gt=0)
     
-    # BUSCA AS VISITAS PARA PREENCHER AS NOVAS TABELAS!
-    # Pega as últimas 500 visitas de Rotina (excluindo os PEs)
     visitas_rotina = Visita.objects.exclude(imovel__tipo='PE').select_related('imovel', 'agente').order_by('-data_visita')[:500]
-    
-    # Pega as últimas 500 visitas de PE
     visitas_pe = Visita.objects.filter(imovel__tipo='PE').select_related('imovel', 'agente').order_by('-data_visita')[:500]
     
     marcadores = []
     for visita in visitas_com_foco:
         try:
-            lat, lng = None, None
+            lat = getattr(visita.imovel, 'latitude', None)
+            lng = getattr(visita.imovel, 'longitude', None)
             if hasattr(visita.imovel, 'localizacao') and visita.imovel.localizacao:
-                lng = visita.imovel.localizacao.x
-                lat = visita.imovel.localizacao.y
+                lng = getattr(visita.imovel.localizacao, 'x', lng)
+                lat = getattr(visita.imovel.localizacao, 'y', lat)
             if lat is not None and lng is not None:
                 marcadores.append({'lat': float(lat), 'lng': float(lng), 'descricao': f"Tubitos: {visita.amostras_coletadas} <br>Data: {visita.data_visita.strftime('%d/%m/%Y')}"})
         except Exception: continue
 
     marcadores_json = json.dumps(marcadores)
-
     contexto = {
         'total_visitas': total_visitas, 'focos_dengue': focos_dengue, 'agentes_ativos': agentes_ativos,
         'agentes_lista': agentes_lista, 'marcadores_json': marcadores_json,
-        'visitas_rotina': visitas_rotina, 'visitas_pe': visitas_pe, # <--- ENVIANDO PARA O HTML
+        'visitas_rotina': visitas_rotina, 'visitas_pe': visitas_pe,
     }
     return render(request, 'dashboard.html', contexto)
 
@@ -161,13 +155,19 @@ def api_visitas(request, pk=None):
             imovel = Imovel.objects.filter(id=imovel_id).first()
             if not imovel: return Response({"erro": "Imóvel não encontrado"}, status=400)
             nova = Visita(imovel=imovel)
-            agente_id = request.data.get('agente')
-            agente = Agente.objects.filter(id=agente_id).first()
-            if not agente: agente = Agente.objects.first()
+            
+            # --- AGORA ELE LÊ QUEM MANDOU A VISITA ---
+            agente_username = request.data.get('agente_username')
+            agente = None
+            if agente_username:
+                agente = Agente.objects.filter(user__username=agente_username).first()
             if not agente:
-                u, _ = User.objects.get_or_create(username='temp_user')
-                agente, _ = Agente.objects.get_or_create(nome='Agente Temp', user=u)
+                agente = Agente.objects.filter(id=request.data.get('agente')).first()
+            if not agente:
+                agente = Agente.objects.first()
             nova.agente = agente
+            # -----------------------------------------
+
             for campo, valor in request.data.items():
                 alvo = campo
                 if campo == 'semana_epidemiologica' and not hasattr(nova, 'semana_epidemiologica') and hasattr(nova, 'semana'): alvo = 'semana'
