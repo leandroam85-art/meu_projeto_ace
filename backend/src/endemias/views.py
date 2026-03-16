@@ -115,7 +115,7 @@ def login_personalizado(request):
         return Response({"erro": "Credenciais inválidas."}, status=400)
 
 # ==========================================
-# API DE IMÓVEIS BLINDADA (Corrige espaços fantasmas)
+# API DE IMÓVEIS BLINDADA
 # ==========================================
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([AllowAny])
@@ -173,7 +173,7 @@ def api_imoveis(request, pk=None):
         return Response({"id": imovel.id}, status=200)
 
 # ==========================================
-# API DE VISITAS BLINDADA (Impede falhas na gravação)
+# API DE VISITAS BLINDADA (Força a gravação no banco)
 # ==========================================
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([AllowAny])
@@ -182,18 +182,20 @@ def api_visitas(request, pk=None):
         visitas = Visita.objects.all()
         dados = []
         for v in visitas:
-            # Formata a data corretamente para não travar o celular
             data_v = getattr(v, 'data_visita', None)
             if hasattr(data_v, 'isoformat'):
                 data_str = data_v.isoformat()
             else:
                 data_str = str(data_v) if data_v else None
 
+            # Cobre os dois nomes possíveis da semana epidemiológica
+            semana_epi = getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1))
+
             dados.append({
                 "id": v.id, 
                 "imovel": v.imovel.id if hasattr(v, 'imovel') and v.imovel else None, 
                 "status": getattr(v, 'status', 'N'), 
-                "semana_epidemiologica": getattr(v, 'semana_epidemiologica', 1),
+                "semana_epidemiologica": semana_epi,
                 "data_visita": data_str,
                 "amostras_coletadas": getattr(v, 'amostras_coletadas', 0), 
                 "quantidade_larvas": getattr(v, 'quantidade_larvas', 0),
@@ -211,42 +213,50 @@ def api_visitas(request, pk=None):
             if not imovel:
                 return Response({"erro": "Imóvel não encontrado"}, status=400)
 
+            # Cria a visita vazia e vai preenchendo só o que o seu banco aceitar
+            nova = Visita()
+            if hasattr(nova, 'imovel'):
+                nova.imovel = imovel
+                
             agente_id = request.data.get('agente')
             agente = Agente.objects.filter(id=agente_id).first() if agente_id else Agente.objects.first()
-            
-            nova = Visita(imovel=imovel, agente=agente)
-            
-            # Mapeia com segurança todos os dados do celular pro banco de dados
-            campos_permitidos = [
-                'status', 'ciclo', 'semana_epidemiologica', 'data_visita',
-                'amostras_coletadas', 'quantidade_larvas', 'depositos_eliminados',
-                'larvicida_1_tipo', 'larvicida_1_qtde', 'larvicida_1_dep_tratados',
-                'larvicida_2_tipo', 'larvicida_2_qtde', 'larvicida_2_dep_tratados',
-                'adulticida_tipo', 'adulticida_qtde', 'observacoes',
-                'dep_A1', 'dep_A2', 'dep_B', 'dep_C', 'dep_D1', 'dep_D2', 'dep_E'
-            ]
-            
-            for campo in campos_permitidos:
-                if campo in request.data and hasattr(nova, campo):
-                    valor = request.data[campo]
-                    # Substitui campos vazios por 0 para não quebrar a matemática
-                    if valor == "" and "qtde" in campo: valor = 0.0
-                    elif valor == "" and ("dep_" in campo or campo in ['amostras_coletadas', 'quantidade_larvas', 'depositos_eliminados', 'ciclo', 'semana_epidemiologica']): valor = 0
+            if hasattr(nova, 'agente') and agente:
+                nova.agente = agente
+
+            # Mapeia tudo que vier do celular de forma 100% segura
+            for campo, valor in request.data.items():
+                alvo = campo
+                # Corrige nome da coluna da semana se for diferente no seu banco
+                if campo == 'semana_epidemiologica' and not hasattr(nova, 'semana_epidemiologica') and hasattr(nova, 'semana'):
+                    alvo = 'semana'
                     
-                    setattr(nova, campo, valor)
+                if hasattr(nova, alvo):
+                    if valor == "" and "qtde" in alvo: valor = 0.0
+                    elif valor == "" and ("dep_" in alvo or alvo in ['amostras_coletadas', 'quantidade_larvas', 'depositos_eliminados', 'ciclo']): valor = 0
+                    setattr(nova, alvo, valor)
                     
-            nova.save()
+            # Garante a formatação da data
+            if hasattr(nova, 'data_visita') and request.data.get('data_visita'):
+                from django.utils.dateparse import parse_datetime
+                dt = parse_datetime(request.data['data_visita'])
+                if dt:
+                    nova.data_visita = dt
+
+            nova.save() # Força o salvamento!
             return Response({"id": nova.id}, status=201)
             
         except Exception as e:
-            print("🚨 ERRO AO SALVAR VISITA:", str(e))
             return Response({"erro": str(e)}, status=400)
             
     elif request.method == 'PUT' and pk:
-        visita = Visita.objects.get(id=pk)
-        visita.status = request.data.get('status', getattr(visita, 'status', 'N'))
-        visita.amostras_coletadas = request.data.get('amostras_coletadas', getattr(visita, 'amostras_coletadas', 0))
-        visita.quantidade_larvas = request.data.get('quantidade_larvas', getattr(visita, 'quantidade_larvas', 0))
-        visita.depositos_eliminados = request.data.get('depositos_eliminados', getattr(visita, 'depositos_eliminados', 0))
-        visita.save()
-        return Response({"id": visita.id}, status=200)
+        try:
+            visita = Visita.objects.get(id=pk)
+            for campo, valor in request.data.items():
+                if hasattr(visita, campo) and campo not in ['id', 'imovel', 'agente']:
+                    if valor == "" and "qtde" in campo: valor = 0.0
+                    elif valor == "" and "dep_" in campo: valor = 0
+                    setattr(visita, campo, valor)
+            visita.save()
+            return Response({"id": visita.id}, status=200)
+        except Exception as e:
+            return Response({"erro": str(e)}, status=400)
