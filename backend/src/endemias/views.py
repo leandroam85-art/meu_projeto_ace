@@ -61,6 +61,9 @@ def dashboard_supervisor(request):
     visitas_rotina = Visita.objects.exclude(imovel__tipo='PE').select_related('imovel', 'agente').order_by('-data_visita')[:500]
     visitas_pe = Visita.objects.filter(imovel__tipo='PE').select_related('imovel', 'agente').order_by('-data_visita')[:500]
     
+    # ---> NOVO: Pegando todas as visitas ordenadas para agrupar no painel
+    todas_visitas = Visita.objects.select_related('imovel', 'agente').order_by('imovel__bairro', 'imovel__quarteirao', '-data_visita')
+    
     marcadores = []
     for visita in visitas_com_foco:
         try:
@@ -78,6 +81,7 @@ def dashboard_supervisor(request):
         'total_visitas': total_visitas, 'focos_dengue': focos_dengue, 'agentes_ativos': agentes_ativos,
         'agentes_lista': agentes_lista, 'marcadores_json': marcadores_json,
         'visitas_rotina': visitas_rotina, 'visitas_pe': visitas_pe,
+        'todas_visitas': todas_visitas, # ---> ENVIANDO PARA O HTML
     }
     return render(request, 'dashboard.html', contexto)
 
@@ -156,7 +160,6 @@ def api_visitas(request, pk=None):
             if not imovel: return Response({"erro": "Imóvel não encontrado"}, status=400)
             nova = Visita(imovel=imovel)
             
-            # --- AGORA ELE LÊ QUEM MANDOU A VISITA ---
             agente_username = request.data.get('agente_username')
             agente = None
             if agente_username:
@@ -166,7 +169,6 @@ def api_visitas(request, pk=None):
             if not agente:
                 agente = Agente.objects.first()
             nova.agente = agente
-            # -----------------------------------------
 
             for campo, valor in request.data.items():
                 alvo = campo

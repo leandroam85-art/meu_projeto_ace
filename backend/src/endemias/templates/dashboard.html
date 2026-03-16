@@ -16,10 +16,9 @@
             overflow-x: hidden;
         }
         
-        /* BARRA LATERAL (SIDEBAR) */
         .sidebar {
             height: 100vh;
-            background-color: #1E3A8A; /* Azul do app do celular */
+            background-color: #1E3A8A; 
             color: white;
             position: fixed;
             top: 0;
@@ -52,7 +51,7 @@
         }
         
         .nav-pills .nav-link.active {
-            background-color: #4CAF50; /* Verde sucesso */
+            background-color: #4CAF50;
             color: white;
             box-shadow: 0 4px 6px rgba(0,0,0,0.2);
         }
@@ -63,14 +62,12 @@
             margin-right: 10px;
         }
 
-        /* CONTEÚDO PRINCIPAL */
         .main-content {
-            margin-left: 260px; /* Compensa a largura da sidebar */
+            margin-left: 260px; 
             padding: 30px;
             min-height: 100vh;
         }
 
-        /* CARDS DE ESTATÍSTICA */
         .stat-card {
             border: none;
             border-radius: 12px;
@@ -221,7 +218,6 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-secondary"><i class="fa-solid fa-house-chimney-medical me-2"></i> Inspeções de Rotina</h2>
                 </div>
-                
                 <div class="card stat-card bg-white p-4">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
@@ -239,35 +235,20 @@
                                 {% for visita in visitas_rotina %}
                                 <tr>
                                     <td class="text-secondary fw-bold">
-                                        {% if visita.data_visita %}
-                                            {{ visita.data_visita|date:"d/m/Y H:i" }}
-                                        {% else %}
-                                            S/D
-                                        {% endif %}
+                                        {% if visita.data_visita %}{{ visita.data_visita|date:"d/m/Y H:i" }}{% else %}S/D{% endif %}
                                     </td>
                                     <td><i class="fa-solid fa-user-check text-success me-2"></i>{{ visita.agente.nome|default:"Não Informado" }}</td>
-                                    <td>
-                                        <strong>{{ visita.imovel.endereco }}</strong>, Nº {{ visita.imovel.numero }}<br>
-                                        <small class="text-muted">Quadra: {{ visita.imovel.quarteirao }}</small>
-                                    </td>
+                                    <td><strong>{{ visita.imovel.endereco }}</strong>, Nº {{ visita.imovel.numero }}<br><small class="text-muted">Quadra: {{ visita.imovel.quarteirao }}</small></td>
                                     <td>{{ visita.imovel.bairro }}</td>
                                     <td>
-                                        {% if visita.status == 'N' %}
-                                            <span class="badge bg-success">Normal</span>
-                                        {% elif visita.status == 'F' %}
-                                            <span class="badge bg-warning text-dark">Fechada</span>
-                                        {% elif visita.status == 'R' %}
-                                            <span class="badge bg-danger">Recusada</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ visita.status }}</span>
-                                        {% endif %}
+                                        {% if visita.status == 'N' %}<span class="badge bg-success">Normal</span>
+                                        {% elif visita.status == 'F' %}<span class="badge bg-warning text-dark">Fechada</span>
+                                        {% elif visita.status == 'R' %}<span class="badge bg-danger">Recusada</span>
+                                        {% else %}<span class="badge bg-secondary">{{ visita.status }}</span>{% endif %}
                                     </td>
                                     <td class="text-center">
-                                        {% if visita.amostras_coletadas > 0 %}
-                                            <span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> {{ visita.amostras_coletadas }}</span>
-                                        {% else %}
-                                            <span class="badge bg-light text-dark border fs-6">0</span>
-                                        {% endif %}
+                                        {% if visita.amostras_coletadas > 0 %}<span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> {{ visita.amostras_coletadas }}</span>
+                                        {% else %}<span class="badge bg-light text-dark border fs-6">0</span>{% endif %}
                                     </td>
                                 </tr>
                                 {% empty %}
@@ -288,7 +269,6 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-secondary"><i class="fa-solid fa-industry me-2 text-danger"></i> Inspeções de Pontos Estratégicos (P.E.)</h2>
                 </div>
-                
                 <div class="card stat-card bg-white p-4 border-start border-danger border-4">
                     <div class="table-responsive">
                         <table class="table table-hover align-middle">
@@ -306,35 +286,20 @@
                                 {% for visita in visitas_pe %}
                                 <tr>
                                     <td class="text-secondary fw-bold">
-                                        {% if visita.data_visita %}
-                                            {{ visita.data_visita|date:"d/m/Y H:i" }}
-                                        {% else %}
-                                            S/D
-                                        {% endif %}
+                                        {% if visita.data_visita %}{{ visita.data_visita|date:"d/m/Y H:i" }}{% else %}S/D{% endif %}
                                     </td>
                                     <td><i class="fa-solid fa-user-check text-danger me-2"></i>{{ visita.agente.nome|default:"Não Informado" }}</td>
-                                    <td>
-                                        <strong>{{ visita.imovel.endereco }}</strong>, Nº {{ visita.imovel.numero }}<br>
-                                        <small class="text-muted">Quadra: {{ visita.imovel.quarteirao }}</small>
-                                    </td>
+                                    <td><strong>{{ visita.imovel.endereco }}</strong>, Nº {{ visita.imovel.numero }}<br><small class="text-muted">Quadra: {{ visita.imovel.quarteirao }}</small></td>
                                     <td>{{ visita.imovel.bairro }}</td>
                                     <td>
-                                        {% if visita.status == 'N' %}
-                                            <span class="badge bg-success">Normal</span>
-                                        {% elif visita.status == 'F' %}
-                                            <span class="badge bg-warning text-dark">Fechada</span>
-                                        {% elif visita.status == 'R' %}
-                                            <span class="badge bg-danger">Recusada</span>
-                                        {% else %}
-                                            <span class="badge bg-secondary">{{ visita.status }}</span>
-                                        {% endif %}
+                                        {% if visita.status == 'N' %}<span class="badge bg-success">Normal</span>
+                                        {% elif visita.status == 'F' %}<span class="badge bg-warning text-dark">Fechada</span>
+                                        {% elif visita.status == 'R' %}<span class="badge bg-danger">Recusada</span>
+                                        {% else %}<span class="badge bg-secondary">{{ visita.status }}</span>{% endif %}
                                     </td>
                                     <td class="text-center">
-                                        {% if visita.amostras_coletadas > 0 %}
-                                            <span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> {{ visita.amostras_coletadas }}</span>
-                                        {% else %}
-                                            <span class="badge bg-light text-dark border fs-6">0</span>
-                                        {% endif %}
+                                        {% if visita.amostras_coletadas > 0 %}<span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> {{ visita.amostras_coletadas }}</span>
+                                        {% else %}<span class="badge bg-light text-dark border fs-6">0</span>{% endif %}
                                     </td>
                                 </tr>
                                 {% empty %}
@@ -353,12 +318,78 @@
 
             <div class="tab-pane fade" id="conteudo-historico" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="fw-bold text-secondary"><i class="fa-solid fa-clock-rotate-left me-2"></i> Histórico Agrupado</h2>
+                    <h2 class="fw-bold text-secondary"><i class="fa-solid fa-clock-rotate-left me-2 text-success"></i> Histórico Agrupado</h2>
                 </div>
-                <div class="card stat-card p-5 text-center bg-white">
-                    <i class="fa-solid fa-person-digging fa-4x text-muted mb-3"></i>
-                    <h4 class="text-muted">Módulo em Integração</h4>
-                    <p class="text-secondary">O histórico de visitas separadas por Bairro e Quarteirão aparecerá aqui.</p>
+                
+                <div class="card stat-card bg-white p-4 border-start border-success border-4">
+                    <p class="text-muted mb-4"><i class="fa-solid fa-circle-info me-1"></i> Clique no nome do bairro para expandir os quarteirões e ver os imóveis visitados.</p>
+                    
+                    {% regroup todas_visitas by imovel.bairro as bairro_list %}
+                    
+                    <div class="accordion shadow-sm" id="accordionBairros">
+                        {% for bairro in bairro_list %}
+                        <div class="accordion-item border-0 border-bottom">
+                            <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
+                                <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}" aria-expanded="false" aria-controls="collapse-{{ forloop.counter }}" style="background-color: #f8f9fa; color: #1E3A8A;">
+                                    <i class="fa-solid fa-map-location-dot me-2 text-success"></i> Bairro: {{ bairro.grouper|default:"Sem Bairro" }}
+                                    <span class="badge bg-success ms-3 rounded-pill">{{ bairro.list|length }} visitas</span>
+                                </button>
+                            </h2>
+                            <div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse" aria-labelledby="heading-{{ forloop.counter }}" data-bs-parent="#accordionBairros">
+                                <div class="accordion-body p-3 bg-light">
+                                    
+                                    {% regroup bairro.list by imovel.quarteirao as quarteirao_list %}
+                                    
+                                    {% for quart in quarteirao_list %}
+                                    <div class="card mb-3 border-0 shadow-sm">
+                                        <div class="card-header bg-white fw-bold text-secondary d-flex justify-content-between align-items-center">
+                                            <span><i class="fa-solid fa-border-all me-2 text-warning"></i> Quarteirão: {{ quart.grouper|default:"S/Q" }}</span>
+                                            <span class="badge bg-secondary">{{ quart.list|length }} visitas</span>
+                                        </div>
+                                        <div class="table-responsive">
+                                            <table class="table table-sm table-hover align-middle mb-0">
+                                                <thead class="table-light">
+                                                    <tr>
+                                                        <th>Data</th>
+                                                        <th>Endereço</th>
+                                                        <th>Status</th>
+                                                        <th class="text-center">Amostras</th>
+                                                        <th>Agente</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody>
+                                                    {% for v in quart.list %}
+                                                    <tr>
+                                                        <td class="text-muted fw-bold">{{ v.data_visita|date:"d/m/Y" }}</td>
+                                                        <td>Nº {{ v.imovel.numero|default:"S/N" }} - {{ v.imovel.endereco }}<br><small class="text-muted">Tipo: {{ v.imovel.tipo }}</small></td>
+                                                        <td>
+                                                            {% if v.status == 'N' %}<span class="badge bg-success">Normal</span>
+                                                            {% elif v.status == 'F' %}<span class="badge bg-warning text-dark">Fechada</span>
+                                                            {% elif v.status == 'R' %}<span class="badge bg-danger">Recusada</span>
+                                                            {% else %}<span class="badge bg-secondary">{{ v.status }}</span>{% endif %}
+                                                        </td>
+                                                        <td class="text-center">
+                                                            {% if v.amostras_coletadas > 0 %}<span class="badge bg-danger rounded-pill"><i class="fa-solid fa-vial-virus"></i> {{ v.amostras_coletadas }}</span>{% else %}<span class="text-muted">0</span>{% endif %}
+                                                        </td>
+                                                        <td><small><i class="fa-solid fa-user text-muted me-1"></i> {{ v.agente.nome|default:"-" }}</small></td>
+                                                    </tr>
+                                                    {% endfor %}
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                    {% endfor %}
+                                    
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-5 text-muted">
+                            <i class="fa-solid fa-folder-open fa-4x mb-3 text-light"></i>
+                            <h5>Nenhum histórico encontrado.</h5>
+                        </div>
+                        {% endfor %}
+                    </div>
                 </div>
             </div>
 
@@ -377,7 +408,6 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-secondary"><i class="fa-solid fa-users-gear me-2"></i> Gerenciamento de Agentes</h2>
                 </div>
-
                 <div class="row">
                     <div class="col-md-4 mb-4">
                         <div class="card stat-card bg-white p-4 h-100">
@@ -401,7 +431,6 @@
                             </form>
                         </div>
                     </div>
-
                     <div class="col-md-8 mb-4">
                         <div class="card stat-card bg-white p-4 h-100">
                             <h5 class="fw-bold mb-4 text-secondary"><i class="fa-solid fa-clipboard-list me-2"></i> Equipe Ativa</h5>
