@@ -1,17 +1,14 @@
 from django.urls import path
-from rest_framework.authtoken.views import obtain_auth_token
 from . import views
 
 urlpatterns = [
     # A PORTA DE ENTRADA DO APLICATIVO (COM BARRA): 
-    # Recebe usuário e senha e devolve o Token de segurança
-    path('login/', obtain_auth_token, name='api_login'),
+    # Chama a nossa fechadura personalizada que aceita português e inglês!
+    path('login/', views.login_personalizado, name='api_login'),
     
-    # --- ALTERAÇÃO AQUI 👇 ---
     # A PORTA ALTERNATIVA (SEM BARRA): 
     # Para o celular que "engole" a barra no final do link não perder a senha!
-    path('login', obtain_auth_token),
-    # -------------------------
+    path('login', views.login_personalizado),
     
     # (No futuro, colocaremos aqui a rota que recebe os focos de dengue)
     # path('visitas/', views.receber_visita, name='receber_visita'),
