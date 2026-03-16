@@ -1,9 +1,7 @@
-from django.contrib import admin
-from django.urls import path, include
-from endemias import views
+from django.urls import path
 
+# Aqui ficarão APENAS as rotas da API do celular. 
+# NUNCA coloque o admin.site.urls ou o dashboard aqui dentro!
 urlpatterns = [
-    path('', views.dashboard_supervisor, name='dashboard'),
-    path('admin/', admin.site.urls),
-    path('api/', include('endemias.urls')),
+    # path('visitas/', views.alguma_view_de_api),
 ]

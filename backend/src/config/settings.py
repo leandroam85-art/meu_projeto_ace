@@ -6,22 +6,26 @@ from pathlib import Path
 import os
 from urllib.parse import urlparse
 
-# Caminho base do projeto
+# =========================
+# CAMINHOS E SEGURANÇA
+# =========================
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Segurança
 SECRET_KEY = 'django-insecure-&p=l9_%+2$x&x%ebp@_^!saqcb&mlzlb6@p5s6ze*v6!ji2^^l'
 
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# Permissões Render
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
 ]
 
-# Aplicativos
+# =========================
+# APLICATIVOS E MIDDLEWARE
+# =========================
+
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
@@ -41,7 +45,6 @@ INSTALLED_APPS = [
     'endemias',
 ]
 
-# Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware',
@@ -58,7 +61,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [BASE_DIR / "templates"],   # pasta de templates
+        'DIRS': [BASE_DIR / "templates"],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -73,16 +76,14 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-
 # =========================
-# BANCO DE DADOS
+# BANCO DE DADOS (POSTGIS)
 # =========================
 
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
     url = urlparse(DATABASE_URL)
-
     DATABASES = {
         'default': {
             'ENGINE': 'django.contrib.gis.db.backends.postgis',
@@ -93,7 +94,6 @@ if DATABASE_URL:
             'PORT': url.port,
         }
     }
-
 else:
     DATABASES = {
         'default': {
@@ -106,9 +106,8 @@ else:
         }
     }
 
-
 # =========================
-# SENHAS
+# VALIDAÇÃO DE SENHAS
 # =========================
 
 AUTH_PASSWORD_VALIDATORS = [
@@ -118,42 +117,25 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-
 # =========================
-# INTERNACIONALIZAÇÃO
+# INTERNACIONALIZAÇÃO ESTÁVEL
 # =========================
 
 LANGUAGE_CODE = 'pt-br'
-
-LANGUAGES = [
-    ('pt-br', 'Português'),
-]
-
 TIME_ZONE = 'America/Cuiaba'
 
-USE_I18N = True
+# Desligado para evitar o erro 'pt-br is not a registered namespace' no Admin
+USE_I18N = False 
 USE_TZ = True
 
-
 # =========================
-# LOGIN
+# CONFIGURAÇÕES ADICIONAIS
 # =========================
 
 LOGIN_URL = '/admin/login/'
 
-
-# =========================
-# ARQUIVOS ESTÁTICOS
-# =========================
-
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
-
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
-
-
-# =========================
-# DEFAULT ID
-# =========================
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
