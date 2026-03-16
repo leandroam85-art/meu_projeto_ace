@@ -12,7 +12,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Chave de segurança
 SECRET_KEY = 'django-insecure-&p=l9_%+2$x&x%ebp@_^!saqcb&mlzlb6@p5s6ze*v6!ji2^^l'
 
-# DEBUG ativo para facilitar ajustes iniciais
+# DEBUG ativo
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
@@ -69,7 +69,7 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# --- BANCO DE DADOS (SUPABASE) ---
+# --- BANCO DE DADOS ---
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
@@ -88,19 +88,29 @@ else:
     DATABASES = {
         'default': {
             'ENGINE': 'django.contrib.gis.db.backends.postgis',
-            'NAME': 'postgres',
-            'USER': 'postgres',
-            'PASSWORD': 'password',
-            'HOST': 'localhost', 
+            'NAME': 'sistema_endemias',
+            'USER': 'admin_saude',
+            'PASSWORD': 'senha_super_segura',
+            'HOST': 'db', 
             'PORT': '5432',
         }
     }
 
-# Internacionalização
-LANGUAGE_CODE = 'pt-br'
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+# --- A BLINDAGEM DO IDIOMA E REDIRECIONAMENTO ---
+LANGUAGE_CODE = 'en-us'
 TIME_ZONE = 'America/Cuiaba'
-USE_I18N = True
+USE_I18N = False
 USE_TZ = True
+
+# ESTA LINHA RESOLVE O ERRO: Diz exatamente para onde ir quando pedir login, sem tentar "traduzir" a rota.
+LOGIN_URL = '/admin/login/'
 
 # Arquivos Estáticos
 STATIC_URL = '/static/'
