@@ -2,24 +2,36 @@ import json
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Visita, Agente, Imovel
-
-# --- IMPORTAÇÕES PARA O CADASTRO NA TELA ---
 from django.contrib.auth.models import User
 from django.contrib import messages
-
-# --- IMPORTAÇÕES PARA A API DO APLICATIVO ---
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from django.db import models
+from django.contrib.gis.geos import Point 
 
+# ==========================================
+# CONVERSOR UNIVERSAL ANTI-CRASH
+# ==========================================
+def converte_seguro(modelo, campo, valor):
+    """Lê o banco de dados e formata o valor corretamente para nunca dar erro"""
+    try:
+        campo_db = modelo._meta.get_field(campo)
+        if isinstance(campo_db, (models.IntegerField, models.FloatField, models.DecimalField)):
+            if valor in ["", "S/N", None, "null"]:
+                return 0
+            return float(valor) if isinstance(campo_db, models.FloatField) else int(float(valor))
+    except:
+        pass
+    return valor
+
+# ==========================================
+# PAINEL DO SUPERVISOR
+# ==========================================
 @login_required(login_url='/admin/login/')
 def dashboard_supervisor(request):
-
-    # ==========================================
-    # MOTOR DE GERENCIAMENTO (CADASTRAR, EDITAR, EXCLUIR)
-    # ==========================================
     if request.method == 'POST':
         acao = request.POST.get('acao') 
 
@@ -58,9 +70,6 @@ def dashboard_supervisor(request):
             except Exception as e:
                 messages.error(request, 'Erro ao excluir o agente.')
 
-    # ==========================================
-    # DADOS DO DASHBOARD E MAPA
-    # ==========================================
     total_visitas = Visita.objects.count()
     agentes_ativos = Agente.objects.count()
     agentes_lista = Agente.objects.all().order_by('nome') 
@@ -71,9 +80,13 @@ def dashboard_supervisor(request):
     marcadores = []
     for visita in visitas_com_foco:
         try:
-            lat = getattr(visita.imovel, 'latitude', None)
-            lng = getattr(visita.imovel, 'longitude', None)
-            if lat and lng:
+            # Tenta ler o mapa com segurança
+            lat, lng = None, None
+            if hasattr(visita.imovel, 'localizacao') and visita.imovel.localizacao:
+                lng = visita.imovel.localizacao.x
+                lat = visita.imovel.localizacao.y
+                
+            if lat is not None and lng is not None:
                 marcadores.append({
                     'lat': float(lat),
                     'lng': float(lng),
@@ -94,9 +107,8 @@ def dashboard_supervisor(request):
 
     return render(request, 'dashboard.html', contexto)
 
-
 # ==========================================
-# NOSSA FECHADURA INTELIGENTE PARA O APK
+# FECHADURA DO APLICATIVO
 # ==========================================
 @api_view(['POST'])
 @permission_classes([AllowAny])
@@ -114,57 +126,54 @@ def login_personalizado(request):
     else:
         return Response({"erro": "Credenciais inválidas."}, status=400)
 
-
 # ==========================================
-# API DE IMÓVEIS (Preenchimento Inteligente)
+# API DE IMÓVEIS (Corrigido o erro NULL do Render)
 # ==========================================
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([AllowAny])
 def api_imoveis(request, pk=None):
     if request.method == 'GET':
-        try:
-            imoveis = Imovel.objects.all()
-            dados = []
-            for i in imoveis:
-                b = getattr(i, 'bairro', '')
-                dados.append({
-                    "id": i.id,
-                    "endereco": getattr(i, 'endereco', 'S/N'),
-                    "numero": getattr(i, 'numero', 'S/N'),
-                    "bairro": str(b).strip() if b else '',
-                    "quarteirao": getattr(i, 'quarteirao', ''),
-                    "tipo": getattr(i, 'tipo', 'R')
-                })
-            return Response(dados)
-        except Exception as e:
-            return Response({"erro": str(e)}, status=500)
+        imoveis = Imovel.objects.all()
+        dados = []
+        for i in imoveis:
+            lat, lng = 0.0, 0.0
+            if hasattr(i, 'localizacao') and i.localizacao:
+                lng = getattr(i.localizacao, 'x', 0)
+                lat = getattr(i.localizacao, 'y', 0)
+
+            loc = f"POINT({lng} {lat})"
+            b = getattr(i, 'bairro', '')
+
+            dados.append({
+                "id": i.id,
+                "endereco": str(getattr(i, 'endereco', 'S/N')).strip(),
+                "numero": str(getattr(i, 'numero', 'S/N')).strip(),
+                "bairro": str(b).strip() if b else '',
+                "quarteirao": str(getattr(i, 'quarteirao', '')).strip(),
+                "tipo": str(getattr(i, 'tipo', 'R')).strip(),
+                "localizacao": loc
+            })
+        return Response(dados)
 
     elif request.method == 'POST':
         try:
-            novo = Imovel()
-            
-            # Varre todos os dados que vieram do celular
-            for campo, valor in request.data.items():
-                if hasattr(novo, campo) and campo not in ['id', 'localizacao']:
-                    if isinstance(valor, str): 
-                        valor = valor.strip()
-                    
-                    # Se vier vazio, não deixa travar o banco
-                    if valor == "" and campo == 'numero': valor = 'S/N'
-                    elif valor == "" and campo == 'quarteirao': valor = 0
-                    
-                    setattr(novo, campo, valor)
-
-            # Tenta ler as coordenadas separadas do mapa
             loc_str = request.data.get('localizacao', '')
+            ponto = Point(0, 0)
             if loc_str.startswith('POINT'):
                 try:
                     coords = loc_str.replace('POINT(', '').replace(')', '').split()
-                    if hasattr(novo, 'longitude'): novo.longitude = float(coords[0])
-                    if hasattr(novo, 'latitude'): novo.latitude = float(coords[1])
+                    ponto = Point(float(coords[0]), float(coords[1]))
                 except: pass
-                
-            novo.save()
+
+            # Cria e força a injeção do ponto no banco (Sem usar hasattr)
+            novo = Imovel.objects.create(
+                endereco=str(request.data.get('endereco', '')).strip(),
+                numero=str(request.data.get('numero', 'S/N')).strip() or 'S/N',
+                bairro=str(request.data.get('bairro', '')).strip(),
+                quarteirao=converte_seguro(Imovel, 'quarteirao', str(request.data.get('quarteirao', 0)).strip()),
+                tipo=str(request.data.get('tipo', 'R')).strip(),
+                localizacao=ponto # <--- A injeção direta resolve o erro do log!
+            )
             return Response({"id": novo.id}, status=201)
         except Exception as e:
             print("🚨 ERRO AO SALVAR IMÓVEL:", str(e))
@@ -174,49 +183,54 @@ def api_imoveis(request, pk=None):
         try:
             imovel = Imovel.objects.get(id=pk)
             for campo, valor in request.data.items():
-                if hasattr(imovel, campo) and campo not in ['id', 'localizacao']:
-                    if isinstance(valor, str): valor = valor.strip()
-                    if valor == "" and campo == 'numero': valor = 'S/N'
-                    elif valor == "" and campo == 'quarteirao': valor = 0
-                    setattr(imovel, campo, valor)
+                if campo in ['id', 'localizacao']: continue
+                if isinstance(valor, str): valor = valor.strip()
+                valor_seguro = converte_seguro(Imovel, campo, valor)
+                try: setattr(imovel, campo, valor_seguro)
+                except: pass
+            
+            # Atualiza o GPS se ele vier na edição
+            loc_str = request.data.get('localizacao', '')
+            if loc_str.startswith('POINT'):
+                try:
+                    coords = loc_str.replace('POINT(', '').replace(')', '').split()
+                    imovel.localizacao = Point(float(coords[0]), float(coords[1]))
+                except: pass
+
             imovel.save()
             return Response({"id": imovel.id}, status=200)
         except Exception as e:
             return Response({"erro": str(e)}, status=400)
 
-
 # ==========================================
-# API DE VISITAS (Preenchimento Inteligente)
+# API DE VISITAS 
 # ==========================================
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([AllowAny])
 def api_visitas(request, pk=None):
     if request.method == 'GET':
-        try:
-            visitas = Visita.objects.all()
-            dados = []
-            for v in visitas:
-                data_v = getattr(v, 'data_visita', None)
-                data_str = data_v.isoformat() if hasattr(data_v, 'isoformat') else str(data_v) if data_v else None
-                semana_epi = getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1))
+        visitas = Visita.objects.all()
+        dados = []
+        for v in visitas:
+            data_v = getattr(v, 'data_visita', None)
+            data_str = data_v.isoformat() if hasattr(data_v, 'isoformat') else str(data_v) if data_v else None
+            semana_epi = getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1))
 
-                dados.append({
-                    "id": v.id,
-                    "imovel": v.imovel.id if hasattr(v, 'imovel') and v.imovel else None,
-                    "status": getattr(v, 'status', 'N'),
-                    "semana_epidemiologica": semana_epi,
-                    "data_visita": data_str,
-                    "amostras_coletadas": getattr(v, 'amostras_coletadas', 0),
-                    "quantidade_larvas": getattr(v, 'quantidade_larvas', 0),
-                    "dep_A1": getattr(v, 'dep_A1', 0), "dep_A2": getattr(v, 'dep_A2', 0),
-                    "dep_B": getattr(v, 'dep_B', 0), "dep_C": getattr(v, 'dep_C', 0),
-                    "dep_D1": getattr(v, 'dep_D1', 0), "dep_D2": getattr(v, 'dep_D2', 0),
-                    "dep_E": getattr(v, 'dep_E', 0)
-                })
-            return Response(dados)
-        except Exception as e:
-            return Response({"erro": str(e)}, status=500)
-            
+            dados.append({
+                "id": v.id,
+                "imovel": v.imovel.id if hasattr(v, 'imovel') and v.imovel else None,
+                "status": getattr(v, 'status', 'N'),
+                "semana_epidemiologica": semana_epi,
+                "data_visita": data_str,
+                "amostras_coletadas": getattr(v, 'amostras_coletadas', 0),
+                "quantidade_larvas": getattr(v, 'quantidade_larvas', 0),
+                "dep_A1": getattr(v, 'dep_A1', 0), "dep_A2": getattr(v, 'dep_A2', 0),
+                "dep_B": getattr(v, 'dep_B', 0), "dep_C": getattr(v, 'dep_C', 0),
+                "dep_D1": getattr(v, 'dep_D1', 0), "dep_D2": getattr(v, 'dep_D2', 0),
+                "dep_E": getattr(v, 'dep_E', 0)
+            })
+        return Response(dados)
+        
     elif request.method == 'POST':
         try:
             imovel_id = request.data.get('imovel')
@@ -224,25 +238,21 @@ def api_visitas(request, pk=None):
             if not imovel:
                 return Response({"erro": "Imóvel não encontrado"}, status=400)
 
-            nova = Visita()
-            if hasattr(nova, 'imovel'): nova.imovel = imovel
-                
+            nova = Visita(imovel=imovel)
             agente_id = request.data.get('agente')
             agente = Agente.objects.filter(id=agente_id).first() if agente_id else Agente.objects.first()
-            if hasattr(nova, 'agente') and agente: nova.agente = agente
+            if agente: nova.agente = agente
 
             for campo, valor in request.data.items():
                 alvo = campo
-                # Garante que funciona se a coluna chamar só "semana" no seu banco
                 if campo == 'semana_epidemiologica' and not hasattr(nova, 'semana_epidemiologica') and hasattr(nova, 'semana'):
                     alvo = 'semana'
                     
-                if hasattr(nova, alvo) and alvo not in ['id', 'imovel', 'agente', 'data_visita']:
+                if alvo not in ['id', 'imovel', 'agente', 'data_visita', 'localizacao']:
                     if isinstance(valor, str): valor = valor.strip()
-                    # Transforma vazios em zero para não dar erro na gravação
-                    if valor == "" and "qtde" in alvo: valor = 0.0
-                    elif valor == "" and ("dep_" in alvo or alvo in ['amostras_coletadas', 'quantidade_larvas', 'depositos_eliminados', 'ciclo']): valor = 0
-                    setattr(nova, alvo, valor)
+                    valor_seguro = converte_seguro(Visita, alvo, valor)
+                    try: setattr(nova, alvo, valor_seguro)
+                    except: pass
                     
             if hasattr(nova, 'data_visita') and request.data.get('data_visita'):
                 from django.utils.dateparse import parse_datetime
@@ -259,11 +269,11 @@ def api_visitas(request, pk=None):
         try:
             visita = Visita.objects.get(id=pk)
             for campo, valor in request.data.items():
-                if hasattr(visita, campo) and campo not in ['id', 'imovel', 'agente', 'data_visita']:
+                if campo not in ['id', 'imovel', 'agente', 'data_visita']:
                     if isinstance(valor, str): valor = valor.strip()
-                    if valor == "" and "qtde" in campo: valor = 0.0
-                    elif valor == "" and "dep_" in campo: valor = 0
-                    setattr(visita, campo, valor)
+                    valor_seguro = converte_seguro(Visita, campo, valor)
+                    try: setattr(visita, campo, valor_seguro)
+                    except: pass
             visita.save()
             return Response({"id": visita.id}, status=200)
         except Exception as e:
