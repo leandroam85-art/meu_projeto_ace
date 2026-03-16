@@ -1,7 +1,7 @@
 import json
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Visita, Agente
+from .models import Visita, Agente, Imovel
 
 # --- IMPORTAÇÕES PARA O CADASTRO NA TELA ---
 from django.contrib.auth.models import User
@@ -13,6 +13,7 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
+from django.contrib.gis.geos import Point
 
 @login_required(login_url='/admin/login/')
 def dashboard_supervisor(request):
@@ -117,3 +118,95 @@ def login_personalizado(request):
         return Response({"token": token.key})
     else:
         return Response({"erro": "Credenciais inválidas."}, status=400)
+
+# ==========================================
+# API DE IMÓVEIS (Para o App baixar e enviar)
+# ==========================================
+@api_view(['GET', 'POST', 'PUT'])
+@permission_classes([AllowAny])
+def api_imoveis(request, pk=None):
+    if request.method == 'GET':
+        imoveis = Imovel.objects.all()
+        dados = [{"id": i.id, "endereco": i.endereco, "numero": i.numero, "bairro": i.bairro, "quarteirao": i.quarteirao, "tipo": i.tipo} for i in imoveis]
+        return Response(dados)
+        
+    elif request.method == 'POST':
+        loc_str = request.data.get('localizacao', '')
+        ponto = Point(0, 0)
+        if loc_str.startswith('POINT'):
+            try:
+                coords = loc_str.replace('POINT(', '').replace(')', '').split()
+                ponto = Point(float(coords[0]), float(coords[1]))
+            except: pass
+        
+        novo = Imovel.objects.create(
+            endereco=request.data.get('endereco', ''),
+            numero=request.data.get('numero', 'S/N'),
+            bairro=request.data.get('bairro', ''),
+            quarteirao=request.data.get('quarteirao', ''),
+            tipo=request.data.get('tipo', 'R'),
+            localizacao=ponto
+        )
+        return Response({"id": novo.id}, status=201)
+
+    elif request.method == 'PUT' and pk:
+        imovel = Imovel.objects.get(id=pk)
+        imovel.endereco = request.data.get('endereco', imovel.endereco)
+        imovel.numero = request.data.get('numero', imovel.numero)
+        imovel.bairro = request.data.get('bairro', imovel.bairro)
+        imovel.quarteirao = request.data.get('quarteirao', imovel.quarteirao)
+        imovel.tipo = request.data.get('tipo', imovel.tipo)
+        imovel.save()
+        return Response({"id": imovel.id}, status=200)
+
+# ==========================================
+# API DE VISITAS (Para o App baixar e enviar)
+# ==========================================
+@api_view(['GET', 'POST', 'PUT'])
+@permission_classes([AllowAny])
+def api_visitas(request, pk=None):
+    if request.method == 'GET':
+        visitas = Visita.objects.all()
+        dados = []
+        for v in visitas:
+            dados.append({
+                "id": v.id, "imovel": v.imovel.id, "status": v.status, 
+                "semana_epidemiologica": v.semana_epidemiologica,
+                "data_visita": v.data_visita.isoformat() if v.data_visita else None,
+                "amostras_coletadas": v.amostras_coletadas, "quantidade_larvas": v.quantidade_larvas,
+                "dep_A1": v.dep_A1, "dep_A2": v.dep_A2, "dep_B": v.dep_B, "dep_C": v.dep_C, 
+                "dep_D1": v.dep_D1, "dep_D2": v.dep_D2, "dep_E": v.dep_E
+            })
+        return Response(dados)
+        
+    elif request.method == 'POST':
+        try:
+            imovel = Imovel.objects.get(id=request.data.get('imovel'))
+            agente_id = request.data.get('agente')
+            agente = Agente.objects.filter(id=agente_id).first() if agente_id else Agente.objects.first()
+            
+            nova = Visita.objects.create(
+                imovel=imovel, agente=agente,
+                status=request.data.get('status', 'N'),
+                ciclo=request.data.get('ciclo', 1),
+                semana_epidemiologica=request.data.get('semana_epidemiologica', 1),
+                amostras_coletadas=request.data.get('amostras_coletadas', 0),
+                quantidade_larvas=request.data.get('quantidade_larvas', 0),
+                depositos_eliminados=request.data.get('depositos_eliminados', 0),
+                dep_A1=request.data.get('dep_A1', 0), dep_A2=request.data.get('dep_A2', 0),
+                dep_B=request.data.get('dep_B', 0), dep_C=request.data.get('dep_C', 0),
+                dep_D1=request.data.get('dep_D1', 0), dep_D2=request.data.get('dep_D2', 0),
+                dep_E=request.data.get('dep_E', 0)
+            )
+            return Response({"id": nova.id}, status=201)
+        except Exception as e:
+            return Response({"erro": str(e)}, status=400)
+            
+    elif request.method == 'PUT' and pk:
+        visita = Visita.objects.get(id=pk)
+        visita.status = request.data.get('status', visita.status)
+        visita.amostras_coletadas = request.data.get('amostras_coletadas', visita.amostras_coletadas)
+        visita.quantidade_larvas = request.data.get('quantidade_larvas', visita.quantidade_larvas)
+        visita.depositos_eliminados = request.data.get('depositos_eliminados', visita.depositos_eliminados)
+        visita.save()
+        return Response({"id": visita.id}, status=200)
