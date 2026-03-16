@@ -7,7 +7,6 @@
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
-        /* Define o tamanho do mapa na tela */
         #map { height: 500px; width: 100%; border-radius: 8px; z-index: 1; }
     </style>
 </head>
@@ -29,44 +28,6 @@
         {% endfor %}
     {% endif %}
 
-    <button type="button" class="btn btn-success mb-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoAgente">
-        + Cadastrar Novo Agente
-    </button>
-</div>
-
-<div class="modal fade" id="modalNovoAgente" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header bg-dark text-white">
-                <h5 class="modal-title">Cadastrar Agente para o App</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <form method="POST">
-                {% csrf_token %}
-                <div class="modal-body">
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nome Completo do Agente</label>
-                        <input type="text" name="nome" class="form-control" placeholder="Ex: João da Silva" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Nome de Usuário (Para logar no app)</label>
-                        <input type="text" name="username" class="form-control" placeholder="Ex: agente_joao" required>
-                    </div>
-                    <div class="mb-3">
-                        <label class="form-label fw-bold">Senha</label>
-                        <input type="password" name="senha" class="form-control" required>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                    <button type="submit" class="btn btn-primary">Salvar Agente</button>
-                </div>
-            </form>
-        </div>
-    </div>
-</div>
-
-<div class="container">
     <div class="row mb-4">
         <div class="col-md-4">
             <div class="card text-white bg-primary shadow-sm h-100">
@@ -94,42 +55,122 @@
         </div>
     </div>
 
-    <div class="row mb-5">
-        <div class="col-12">
-            <div class="card shadow-sm">
-                <div class="card-header bg-white fw-bold">
-                    📍 Mapa de Focos Encontrados
-                </div>
-                <div class="card-body p-0">
-                    <div id="map"></div>
-                </div>
+    <div class="card shadow-sm mb-4">
+        <div class="card-header bg-white fw-bold d-flex justify-content-between align-items-center">
+            <span>👥 Gerenciamento de Agentes (Acesso ao App)</span>
+            <button type="button" class="btn btn-sm btn-success shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoAgente">
+                + Novo Agente
+            </button>
+        </div>
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th>Nome do Agente</th>
+                            <th>Usuário (Login)</th>
+                            <th class="text-end">Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for agente in agentes_lista %}
+                        <tr>
+                            <td>{{ agente.nome }}</td>
+                            <td><span class="badge bg-secondary">{{ agente.user.username }}</span></td>
+                            <td class="text-end">
+                                <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#modalSenha{{ agente.id }}">
+                                    🔑 Senha
+                                </button>
+                                <form method="POST" class="d-inline" onsubmit="return confirm('Tem certeza que deseja excluir o agente {{ agente.nome }}? Ele perderá o acesso ao aplicativo na hora.');">
+                                    {% csrf_token %}
+                                    <input type="hidden" name="acao" value="excluir">
+                                    <input type="hidden" name="agente_id" value="{{ agente.id }}">
+                                    <button type="submit" class="btn btn-sm btn-outline-danger">🗑️ Excluir</button>
+                                </form>
+                            </td>
+                        </tr>
+
+                        <div class="modal fade" id="modalSenha{{ agente.id }}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header bg-primary text-white">
+                                        <h5 class="modal-title">Nova Senha: {{ agente.nome }}</h5>
+                                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                                    </div>
+                                    <form method="POST">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="acao" value="redefinir_senha">
+                                        <input type="hidden" name="agente_id" value="{{ agente.id }}">
+                                        <div class="modal-body text-start">
+                                            <label class="form-label fw-bold">Digite a nova senha:</label>
+                                            <input type="password" name="nova_senha" class="form-control" required>
+                                        </div>
+                                        <div class="modal-footer">
+                                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                            <button type="submit" class="btn btn-primary">Salvar Senha</button>
+                                        </div>
+                                    </form>
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <tr>
+                            <td colspan="3" class="text-center text-muted py-3">Nenhum agente cadastrado ainda.</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm mb-5">
+        <div class="card-header bg-white fw-bold">📍 Mapa de Focos Encontrados</div>
+        <div class="card-body p-0"><div id="map"></div></div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalNovoAgente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-success text-white">
+                <h5 class="modal-title">Cadastrar Novo Agente</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <input type="hidden" name="acao" value="cadastrar">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nome Completo</label>
+                        <input type="text" name="nome" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Usuário (Para o App)</label>
+                        <input type="text" name="username" class="form-control" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Senha Inicial</label>
+                        <input type="password" name="senha" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-success">Salvar Agente</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-
 <script>
-    // Inicia o mapa (As coordenadas -10.0115, -51.1158 apontam para a região de Vila Rica)
     var map = L.map('map').setView([-10.0115, -51.1158], 13);
-
-    // Carrega o desenho das ruas do OpenStreetMap
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-        attribution: '© OpenStreetMap'
-    }).addTo(map);
-
-    // Recebe o JSON de focos que o nosso views.py preparou
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }).addTo(map);
     var marcadores = JSON.parse('{{ marcadores_json|escapejs }}');
-
-    // Coloca um pino no mapa para cada foco encontrado
     marcadores.forEach(function(ponto) {
-        L.marker([ponto.lat, ponto.lng])
-         .addTo(map)
-         .bindPopup(ponto.descricao); // Abre a caixinha com detalhes ao clicar no pino
+        L.marker([ponto.lat, ponto.lng]).addTo(map).bindPopup(ponto.descricao);
     });
 </script>
 </body>
