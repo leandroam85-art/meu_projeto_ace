@@ -23,7 +23,6 @@ def dashboard_supervisor(request):
     if request.method == 'POST':
         acao = request.POST.get('acao') 
 
-        # AÇÃO 1: CADASTRAR NOVO AGENTE
         if acao == 'cadastrar':
             nome = request.POST.get('nome')
             username = request.POST.get('username')
@@ -36,7 +35,6 @@ def dashboard_supervisor(request):
                 Agente.objects.create(user=novo_user, nome=nome) 
                 messages.success(request, f'Agente {nome} cadastrado com sucesso!')
 
-        # AÇÃO 2: REDEFINIR SENHA DO AGENTE
         elif acao == 'redefinir_senha':
             agente_id = request.POST.get('agente_id')
             nova_senha = request.POST.get('nova_senha')
@@ -48,7 +46,6 @@ def dashboard_supervisor(request):
             except Exception as e:
                 messages.error(request, 'Erro ao redefinir a senha.')
 
-        # AÇÃO 3: EXCLUIR AGENTE
         elif acao == 'excluir':
             agente_id = request.POST.get('agente_id')
             try:
@@ -118,7 +115,7 @@ def login_personalizado(request):
         return Response({"erro": "Credenciais inválidas."}, status=400)
 
 # ==========================================
-# API DE IMÓVEIS BLINDADA
+# API DE IMÓVEIS BLINDADA (Corrige espaços fantasmas)
 # ==========================================
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([AllowAny])
@@ -127,7 +124,6 @@ def api_imoveis(request, pk=None):
         imoveis = Imovel.objects.all()
         dados = []
         for i in imoveis:
-            # Embala a latitude e longitude pro formato que o celular entende
             loc = ""
             lat = getattr(i, 'latitude', None)
             lng = getattr(i, 'longitude', None)
@@ -136,17 +132,16 @@ def api_imoveis(request, pk=None):
 
             dados.append({
                 "id": i.id, 
-                "endereco": getattr(i, 'endereco', 'S/N'), 
-                "numero": getattr(i, 'numero', 'S/N'), 
-                "bairro": getattr(i, 'bairro', ''), 
-                "quarteirao": getattr(i, 'quarteirao', ''), 
-                "tipo": getattr(i, 'tipo', 'R'),
+                "endereco": str(getattr(i, 'endereco', 'S/N')).strip(), 
+                "numero": str(getattr(i, 'numero', 'S/N')).strip(), 
+                "bairro": str(getattr(i, 'bairro', '')).strip(), 
+                "quarteirao": str(getattr(i, 'quarteirao', '')).strip(), 
+                "tipo": str(getattr(i, 'tipo', 'R')).strip(),
                 "localizacao": loc
             })
         return Response(dados)
         
     elif request.method == 'POST':
-        # Recebe o POINT do celular e quebra em latitude e longitude limpas
         loc_str = request.data.get('localizacao', '')
         lat, lng = 0.0, 0.0
         if loc_str.startswith('POINT'):
@@ -157,11 +152,11 @@ def api_imoveis(request, pk=None):
             except: pass
         
         novo = Imovel.objects.create(
-            endereco=request.data.get('endereco', ''),
-            numero=request.data.get('numero', 'S/N'),
-            bairro=request.data.get('bairro', ''),
-            quarteirao=request.data.get('quarteirao', ''),
-            tipo=request.data.get('tipo', 'R'),
+            endereco=str(request.data.get('endereco', '')).strip(),
+            numero=str(request.data.get('numero', 'S/N')).strip(),
+            bairro=str(request.data.get('bairro', '')).strip(),
+            quarteirao=str(request.data.get('quarteirao', '')).strip(),
+            tipo=str(request.data.get('tipo', 'R')).strip(),
             latitude=lat,     
             longitude=lng     
         )
@@ -169,16 +164,16 @@ def api_imoveis(request, pk=None):
 
     elif request.method == 'PUT' and pk:
         imovel = Imovel.objects.get(id=pk)
-        imovel.endereco = request.data.get('endereco', imovel.endereco)
-        imovel.numero = request.data.get('numero', imovel.numero)
-        imovel.bairro = request.data.get('bairro', imovel.bairro)
-        imovel.quarteirao = request.data.get('quarteirao', imovel.quarteirao)
-        imovel.tipo = request.data.get('tipo', imovel.tipo)
+        imovel.endereco = str(request.data.get('endereco', imovel.endereco)).strip()
+        imovel.numero = str(request.data.get('numero', imovel.numero)).strip()
+        imovel.bairro = str(request.data.get('bairro', imovel.bairro)).strip()
+        imovel.quarteirao = str(request.data.get('quarteirao', imovel.quarteirao)).strip()
+        imovel.tipo = str(request.data.get('tipo', imovel.tipo)).strip()
         imovel.save()
         return Response({"id": imovel.id}, status=200)
 
 # ==========================================
-# API DE VISITAS BLINDADA
+# API DE VISITAS BLINDADA (Impede falhas na gravação)
 # ==========================================
 @api_view(['GET', 'POST', 'PUT'])
 @permission_classes([AllowAny])
@@ -187,13 +182,19 @@ def api_visitas(request, pk=None):
         visitas = Visita.objects.all()
         dados = []
         for v in visitas:
+            # Formata a data corretamente para não travar o celular
             data_v = getattr(v, 'data_visita', None)
+            if hasattr(data_v, 'isoformat'):
+                data_str = data_v.isoformat()
+            else:
+                data_str = str(data_v) if data_v else None
+
             dados.append({
                 "id": v.id, 
                 "imovel": v.imovel.id if hasattr(v, 'imovel') and v.imovel else None, 
                 "status": getattr(v, 'status', 'N'), 
                 "semana_epidemiologica": getattr(v, 'semana_epidemiologica', 1),
-                "data_visita": data_v.isoformat() if data_v else None,
+                "data_visita": data_str,
                 "amostras_coletadas": getattr(v, 'amostras_coletadas', 0), 
                 "quantidade_larvas": getattr(v, 'quantidade_larvas', 0),
                 "dep_A1": getattr(v, 'dep_A1', 0), "dep_A2": getattr(v, 'dep_A2', 0), 
@@ -205,28 +206,40 @@ def api_visitas(request, pk=None):
         
     elif request.method == 'POST':
         try:
-            imovel = Imovel.objects.get(id=request.data.get('imovel'))
+            imovel_id = request.data.get('imovel')
+            imovel = Imovel.objects.filter(id=imovel_id).first()
+            if not imovel:
+                return Response({"erro": "Imóvel não encontrado"}, status=400)
+
             agente_id = request.data.get('agente')
             agente = Agente.objects.filter(id=agente_id).first() if agente_id else Agente.objects.first()
             
-            nova = Visita.objects.create(
-                imovel=imovel, agente=agente,
-                status=request.data.get('status', 'N'),
-                ciclo=request.data.get('ciclo', 1),
-                semana_epidemiologica=request.data.get('semana_epidemiologica', 1),
-                amostras_coletadas=request.data.get('amostras_coletadas', 0),
-                quantidade_larvas=request.data.get('quantidade_larvas', 0),
-                depositos_eliminados=request.data.get('depositos_eliminados', 0)
-            )
+            nova = Visita(imovel=imovel, agente=agente)
             
-            # Salva os depósitos sem quebrar
-            for campo in ['dep_A1', 'dep_A2', 'dep_B', 'dep_C', 'dep_D1', 'dep_D2', 'dep_E']:
-                if hasattr(nova, campo):
-                    setattr(nova, campo, request.data.get(campo, 0))
+            # Mapeia com segurança todos os dados do celular pro banco de dados
+            campos_permitidos = [
+                'status', 'ciclo', 'semana_epidemiologica', 'data_visita',
+                'amostras_coletadas', 'quantidade_larvas', 'depositos_eliminados',
+                'larvicida_1_tipo', 'larvicida_1_qtde', 'larvicida_1_dep_tratados',
+                'larvicida_2_tipo', 'larvicida_2_qtde', 'larvicida_2_dep_tratados',
+                'adulticida_tipo', 'adulticida_qtde', 'observacoes',
+                'dep_A1', 'dep_A2', 'dep_B', 'dep_C', 'dep_D1', 'dep_D2', 'dep_E'
+            ]
+            
+            for campo in campos_permitidos:
+                if campo in request.data and hasattr(nova, campo):
+                    valor = request.data[campo]
+                    # Substitui campos vazios por 0 para não quebrar a matemática
+                    if valor == "" and "qtde" in campo: valor = 0.0
+                    elif valor == "" and ("dep_" in campo or campo in ['amostras_coletadas', 'quantidade_larvas', 'depositos_eliminados', 'ciclo', 'semana_epidemiologica']): valor = 0
+                    
+                    setattr(nova, campo, valor)
+                    
             nova.save()
-            
             return Response({"id": nova.id}, status=201)
+            
         except Exception as e:
+            print("🚨 ERRO AO SALVAR VISITA:", str(e))
             return Response({"erro": str(e)}, status=400)
             
     elif request.method == 'PUT' and pk:
