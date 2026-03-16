@@ -9,38 +9,42 @@ from urllib.parse import urlparse
 # Caminho base do projeto
 BASE_DIR = Path(__file__).resolve().parent.parent
 
-# Chave de segurança
+# Segurança
 SECRET_KEY = 'django-insecure-&p=l9_%+2$x&x%ebp@_^!saqcb&mlzlb6@p5s6ze*v6!ji2^^l'
 
-# DEBUG ativo
 DEBUG = True
 
 ALLOWED_HOSTS = ['*']
 
-# Permissões para o Render
+# Permissões Render
 CSRF_TRUSTED_ORIGINS = [
     'https://*.onrender.com',
 ]
 
-# Definição dos Aplicativos
+# Aplicativos
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles', 
-    
-    # NOSSOS APLICATIVOS E BIBLIOTECAS:
-    'django.contrib.gis', 
-    'rest_framework',     
+    'django.contrib.staticfiles',
+
+    # GeoDjango
+    'django.contrib.gis',
+
+    # APIs
+    'rest_framework',
     'rest_framework.authtoken',
-    'endemias',           
+
+    # App do sistema
+    'endemias',
 ]
 
+# Middleware
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
-    'whitenoise.middleware.WhiteNoiseMiddleware', 
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -54,7 +58,7 @@ ROOT_URLCONF = 'config.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [BASE_DIR / "templates"],   # pasta de templates
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -69,11 +73,16 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
-# --- BANCO DE DADOS ---
+
+# =========================
+# BANCO DE DADOS
+# =========================
+
 DATABASE_URL = os.environ.get('DATABASE_URL')
 
 if DATABASE_URL:
     url = urlparse(DATABASE_URL)
+
     DATABASES = {
         'default': {
             'ENGINE': 'django.contrib.gis.db.backends.postgis',
@@ -84,6 +93,7 @@ if DATABASE_URL:
             'PORT': url.port,
         }
     }
+
 else:
     DATABASES = {
         'default': {
@@ -91,10 +101,15 @@ else:
             'NAME': 'sistema_endemias',
             'USER': 'admin_saude',
             'PASSWORD': 'senha_super_segura',
-            'HOST': 'db', 
+            'HOST': 'db',
             'PORT': '5432',
         }
     }
+
+
+# =========================
+# SENHAS
+# =========================
 
 AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
@@ -103,18 +118,42 @@ AUTH_PASSWORD_VALIDATORS = [
     {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
 ]
 
-# --- A BLINDAGEM DO IDIOMA E REDIRECIONAMENTO ---
-LANGUAGE_CODE = 'en-us'
+
+# =========================
+# INTERNACIONALIZAÇÃO
+# =========================
+
+LANGUAGE_CODE = 'pt-br'
+
+LANGUAGES = [
+    ('pt-br', 'Português'),
+]
+
 TIME_ZONE = 'America/Cuiaba'
-USE_I18N = False
+
+USE_I18N = True
 USE_TZ = True
 
-# ESTA LINHA RESOLVE O ERRO: Diz exatamente para onde ir quando pedir login, sem tentar "traduzir" a rota.
+
+# =========================
+# LOGIN
+# =========================
+
 LOGIN_URL = '/admin/login/'
 
-# Arquivos Estáticos
+
+# =========================
+# ARQUIVOS ESTÁTICOS
+# =========================
+
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'static')
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
+
+# =========================
+# DEFAULT ID
+# =========================
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
