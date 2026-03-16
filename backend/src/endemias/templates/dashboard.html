@@ -4,104 +4,133 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Painel do Supervisor - Vila Rica</title>
-    
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <style>
+        /* Define o tamanho do mapa na tela */
+        #map { height: 500px; width: 100%; border-radius: 8px; z-index: 1; }
+    </style>
 </head>
 <body class="bg-light">
 
-<nav class="navbar navbar-dark bg-primary mb-4">
+<nav class="navbar navbar-dark bg-dark mb-4 shadow">
     <div class="container-fluid">
-        <span class="navbar-brand mb-0 h1">📍 Vigilância Sanitária - Painel do Supervisor</span>
-        <span class="navbar-text text-white">
-            Bem-vindo(a), {{ request.user.username|default:"Supervisor" }}!
-        </span>
+        <span class="navbar-brand mb-0 h1">🦟 Vigilância Sanitária - Vila Rica/MT</span>
     </div>
 </nav>
 
 <div class="container">
-    <div class="row">
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show shadow-sm" role="alert">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <button type="button" class="btn btn-success mb-3 shadow-sm" data-bs-toggle="modal" data-bs-target="#modalNovoAgente">
+        + Cadastrar Novo Agente
+    </button>
+</div>
+
+<div class="modal fade" id="modalNovoAgente" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-dark text-white">
+                <h5 class="modal-title">Cadastrar Agente para o App</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST">
+                {% csrf_token %}
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nome Completo do Agente</label>
+                        <input type="text" name="nome" class="form-control" placeholder="Ex: João da Silva" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Nome de Usuário (Para logar no app)</label>
+                        <input type="text" name="username" class="form-control" placeholder="Ex: agente_joao" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label fw-bold">Senha</label>
+                        <input type="password" name="senha" class="form-control" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="submit" class="btn btn-primary">Salvar Agente</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row mb-4">
         <div class="col-md-4">
-            <div class="card text-white bg-success mb-3">
-                <div class="card-header">Visitas Realizadas</div>
+            <div class="card text-white bg-primary shadow-sm h-100">
                 <div class="card-body">
-                    <h2 class="card-title">{{ total_visitas|default:"0" }}</h2>
-                    <p class="card-text">Total registrado</p>
+                    <h5 class="card-title">Total de Visitas</h5>
+                    <p class="card-text display-5 fw-bold">{{ total_visitas }}</p>
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
-            <div class="card text-white bg-danger mb-3">
-                <div class="card-header">Focos de Dengue</div>
+            <div class="card text-white bg-danger shadow-sm h-100">
                 <div class="card-body">
-                    <h2 class="card-title">{{ focos_dengue|default:"0" }}</h2>
-                    <p class="card-text">Total registrado</p>
+                    <h5 class="card-title">Focos de Dengue</h5>
+                    <p class="card-text display-5 fw-bold">{{ focos_dengue }}</p>
                 </div>
             </div>
         </div>
-
         <div class="col-md-4">
-            <div class="card text-white bg-info mb-3">
-                <div class="card-header">Agentes Ativos</div>
+            <div class="card text-dark bg-warning shadow-sm h-100">
                 <div class="card-body">
-                    <h2 class="card-title">{{ agentes_ativos|default:"0" }}</h2>
-                    <p class="card-text">Cadastrados no sistema</p>
+                    <h5 class="card-title">Agentes Ativos</h5>
+                    <p class="card-text display-5 fw-bold">{{ agentes_ativos }}</p>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="row mt-4 mb-5">
+    <div class="row mb-5">
         <div class="col-12">
-            <div class="card">
-                <div class="card-header text-bg-dark">Mapa de Risco Interativo - Vila Rica</div>
+            <div class="card shadow-sm">
+                <div class="card-header bg-white fw-bold">
+                    📍 Mapa de Focos Encontrados
+                </div>
                 <div class="card-body p-0">
-                    <div id="mapa" style="height: 500px; width: 100%; border-bottom-left-radius: 5px; border-bottom-right-radius: 5px;"></div>
+                    <div id="map"></div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+
 <script>
-    // 1. Cria o mapa e aponta para as coordenadas de Vila Rica, MT
-    var mapa = L.map('mapa').setView([-10.0125, -51.1130], 14);
+    // Inicia o mapa (As coordenadas -10.0115, -51.1158 apontam para a região de Vila Rica)
+    var map = L.map('map').setView([-10.0115, -51.1158], 13);
 
-    // 2. Carrega o visual das ruas (CartoDB - Livre de bloqueios!)
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
-        attribution: '© OpenStreetMap contributors, © CARTO',
-        maxZoom: 19
-    }).addTo(mapa);
+    // Carrega o desenho das ruas do OpenStreetMap
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        maxZoom: 19,
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
 
-    // 3. Marcador Fixo da Base de Controle
-    var marcadorBase = L.marker([-10.0125, -51.1130]).addTo(mapa);
-    marcadorBase.bindPopup("<b>Centro de Controle</b><br>Vigilância Sanitária.");
+    // Recebe o JSON de focos que o nosso views.py preparou
+    var marcadores = JSON.parse('{{ marcadores_json|escapejs }}');
 
-    // --- MÁGICA DOS DADOS REAIS DO BANCO ---
-    
-    // O Django envia o JSON e o JavaScript lê aqui:
-    var marcadoresBanco = {{ marcadores_json|safe }};
-
-    // Criando um ícone vermelho para chamar atenção para o perigo!
-    var iconeVermelho = L.icon({
-        iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png',
-        shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png',
-        iconSize: [25, 41],
-        iconAnchor: [12, 41],
-        popupAnchor: [1, -34],
-        shadowSize: [41, 41]
-    });
-
-    // Loop que percorre todos os focos encontrados e os "planta" no mapa
-    marcadoresBanco.forEach(function(ponto) {
-        L.marker([ponto.lat, ponto.lng], {icon: iconeVermelho})
-         .addTo(mapa)
-         .bindPopup("<b>⚠️ FOCO DETECTADO!</b><br>" + ponto.descricao);
+    // Coloca um pino no mapa para cada foco encontrado
+    marcadores.forEach(function(ponto) {
+        L.marker([ponto.lat, ponto.lng])
+         .addTo(map)
+         .bindPopup(ponto.descricao); // Abre a caixinha com detalhes ao clicar no pino
     });
 </script>
-
 </body>
 </html>

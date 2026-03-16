@@ -1,9 +1,13 @@
 import json
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from .models import Visita, Agente
 
-# --- IMPORTAÇÕES NOVAS PARA A API DO APLICATIVO ---
+# --- IMPORTAÇÕES PARA O CADASTRO NA TELA ---
+from django.contrib.auth.models import User
+from django.contrib import messages
+
+# --- IMPORTAÇÕES PARA A API DO APLICATIVO ---
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
@@ -12,6 +16,30 @@ from rest_framework.authtoken.models import Token
 
 @login_required(login_url='/admin/login/')
 def dashboard_supervisor(request):
+
+    # ==========================================
+    # MOTOR DE CADASTRO DO MODAL
+    # ==========================================
+    if request.method == 'POST':
+        nome = request.POST.get('nome')
+        username = request.POST.get('username')
+        senha = request.POST.get('senha')
+        
+        # Verifica se o usuário já existe para não dar erro feio na tela
+        if User.objects.filter(username=username).exists():
+            messages.error(request, f'Erro: O usuário "{username}" já está em uso!')
+        else:
+            # Cria o login (O Gatilho do models.py vai gerar o Token sozinho aqui!)
+            novo_user = User.objects.create_user(username=username, password=senha)
+            
+            # Vincula o login ao Agente, salvando o nome dele
+            Agente.objects.create(user=novo_user, nome=nome) 
+            
+            messages.success(request, f'Agente {nome} cadastrado com sucesso! Já pode testar no celular.')
+
+    # ==========================================
+    # DADOS DO DASHBOARD E MAPA
+    # ==========================================
     total_visitas = Visita.objects.count()
     agentes_ativos = Agente.objects.count()
 

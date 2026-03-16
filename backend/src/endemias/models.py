@@ -1,4 +1,9 @@
 from django.contrib.gis.db import models
+from django.contrib.auth.models import User
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
 
 class Imovel(models.Model):
     TIPO_CHOICES = [
@@ -16,13 +21,27 @@ class Imovel(models.Model):
     tipo = models.CharField(max_length=2, choices=TIPO_CHOICES, default='R')
     localizacao = models.PointField()
 
+    # --- CORREÇÃO PARA O MAPA NÃO QUEBRAR ---
+    # Traduz as coordenadas do GeoDjango para o seu views.py conseguir ler 'latitude' e 'longitude'
+    @property
+    def latitude(self):
+        return self.localizacao.y if self.localizacao else None
+
+    @property
+    def longitude(self):
+        return self.localizacao.x if self.localizacao else None
+
     def __str__(self):
         return f"{self.endereco}, {self.numero} - {self.bairro}"
 
 
 class Agente(models.Model):
+    # --- CORREÇÃO PARA O CADASTRO FUNCIONAR ---
+    # Liga o Agente ao sistema de login do Django
+    user = models.OneToOneField(User, on_delete=models.CASCADE, null=True, blank=True)
     nome = models.CharField(max_length=100)
-    matricula = models.CharField(max_length=50, unique=True)
+    # Deixei a matrícula aceitando vazio (null=True) para não travar o cadastro rápido no dashboard
+    matricula = models.CharField(max_length=50, unique=True, null=True, blank=True) 
 
     def __str__(self):
         return self.nome
@@ -77,3 +96,13 @@ class Visita(models.Model):
 
     def __str__(self):
         return f"Visita {self.id} - Imóvel {self.imovel.id} - Status: {self.status}"
+
+
+# ==========================================
+# GATILHO AUTOMÁTICO DE TOKENS PARA O APP
+# ==========================================
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def criar_token_automatico(sender, instance=None, created=False, **kwargs):
+    # Toda vez que você salvar um usuário no modal, o Django passa por aqui e gera a chave sozinho!
+    if created:
+        Token.objects.create(user=instance)
