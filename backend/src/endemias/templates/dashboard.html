@@ -71,7 +71,10 @@
             <hr class="text-white-50 mx-3">
             
             <li class="nav-item"><button class="nav-link w-100 text-start" id="tab-zoonose" data-bs-toggle="pill" data-bs-target="#conteudo-zoonose" type="button"><i class="fa-solid fa-dog nav-icon" style="color: #FFD54F;"></i> Vacinação Antirrábica</button></li>
+            <li class="nav-item"><button class="nav-link w-100 text-start" id="tab-rel-zoonose" data-bs-toggle="pill" data-bs-target="#conteudo-rel-zoonose" type="button"><i class="fa-solid fa-file-invoice nav-icon" style="color: #FFB74D;"></i> Relatório Vacinação</button></li>
             
+            <hr class="text-white-50 mx-3">
+
             <li class="nav-item"><button class="nav-link w-100 text-start" id="tab-agentes" data-bs-toggle="pill" data-bs-target="#conteudo-agentes" type="button"><i class="fa-solid fa-users-gear nav-icon"></i> Gerenciar Agentes</button></li>
         </ul>
         <div class="p-3 mt-auto">
@@ -349,6 +352,48 @@
                 </div>
             </div>
 
+            <div class="tab-pane fade" id="conteudo-rel-zoonose" role="tabpanel">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2 class="fw-bold text-secondary"><i class="fa-solid fa-file-invoice me-2" style="color: #8D6E63;"></i> Relatório de Vacinação Antirrábica</h2>
+                    <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print me-2"></i> Imprimir Relatório</button>
+                </div>
+                
+                <div class="caixa-filtro mb-4">
+                    <label class="text-muted small ms-2">Filtrar por Agente</label>
+                    <select id="rel-zoo-agente" class="form-select mb-4 border-0 py-3 text-dark fw-bold">
+                        <option value="">Todos os Agentes (Visão Geral)</option>
+                        </select>
+                    
+                    <button class="btn-calcular w-100 py-3" onclick="gerarRelatorioZoonoseJS()" style="background-color: #8D6E63;">
+                        <i class="fa-solid fa-calculator me-2"></i> Gerar Relatório de Vacinação
+                    </button>
+                </div>
+
+                <div id="resultado-relatorio-zoonose" style="display: none;">
+                    <div class="titulo-relatorio mb-4" style="background-color: #FFECB3;">
+                        Vila Rica - MT | Campanha de Vacinação Antirrábica<br>
+                        Filtro de Agente: <span id="lbl-zoo-agente" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 col-lg-6">
+                            <div class="card-relatorio border border-warning">
+                                <h5>Balanço de Animais Vacinados</h5>
+                                <div class="linha-rel"><span><i class="fa-solid fa-dog" style="color: #8D6E63;"></i> Cães Vacinados</span><span class="valor text-dark fs-5" id="r-zoo-caes">0</span></div>
+                                <div class="linha-rel"><span><i class="fa-solid fa-cat" style="color: #FFB74D;"></i> Gatos Vacinados</span><span class="valor text-dark fs-5" id="r-zoo-gatos">0</span></div>
+                                <div class="linha-rel total mt-3 pt-3 border-top"><span>TOTAL DE ANIMAIS</span><span class="valor fs-4 text-success" id="r-zoo-total">0</span></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-6">
+                            <div class="card-relatorio border border-warning">
+                                <h5>Produtividade por Agente (Animais)</h5>
+                                <div id="lista-agentes-zoonose"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
             <div class="tab-pane fade" id="conteudo-agentes" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-secondary"><i class="fa-solid fa-users-gear me-2"></i> Gerenciamento de Agentes</h2>
@@ -405,7 +450,7 @@
     
     <script>
         const visitasDB = JSON.parse('{{ visitas_json|escapejs }}');
-        const vacinacoesDB = JSON.parse('{{ vacinacoes_json|escapejs }}'); // DADOS DA ZOONOSE
+        const vacinacoesDB = JSON.parse('{{ vacinacoes_json|escapejs }}'); 
 
         let map;
         let mapZoonose;
@@ -414,13 +459,10 @@
         const iconeFoco = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
         const iconeNormal = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
         const iconeFechada = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
-        
-        // NOVO ÍCONE: CACHORRO PARA A ZOONOSE
         const iconeZoonose = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
 
         document.addEventListener('DOMContentLoaded', function() {
             
-            // MAPA 1: PNCD (VISITAS)
             var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
             var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
             var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
@@ -436,7 +478,6 @@
                 triggerEl.addEventListener('shown.bs.tab', function (event) { 
                     if(event.target.id === 'tab-dashboard'){ setTimeout(function(){ map.invalidateSize(); }, 100); } 
                     
-                    // CARREGA O MAPA DA ZOONOSE APENAS QUANDO A ABA É ABERTA
                     if(event.target.id === 'tab-zoonose'){ 
                         setTimeout(function(){ 
                             if(!mapZoonose) {
@@ -459,7 +500,7 @@
                 })
             });
 
-            // SELECTS FILTROS DE SEMANA, AGENTE E BAIRRO
+            // FILTROS PNCD
             const selectRelSemana = document.getElementById('rel-semana');
             const selectHistSemana = document.getElementById('hist-semana');
             const selectMapSemana = document.getElementById('map-semana');
@@ -479,12 +520,63 @@
             const selectRotinaBairro = document.getElementById('filtro-rotina-bairro'); const selectPEBairro = document.getElementById('filtro-pe-bairro');
             bairrosUnicos.forEach(b => { selectRotinaBairro.appendChild(new Option(b, b)); selectPEBairro.appendChild(new Option(b, b)); });
 
+            // FILTROS NOVO RELATÓRIO ZOONOSE
+            const selectRelZooAgente = document.getElementById('rel-zoo-agente');
+            let agentesZooUnicos = [...new Set(vacinacoesDB.map(v => v.agente))].filter(n => n && n !== "Sem Agente").sort();
+            agentesZooUnicos.forEach(ag => {
+                selectRelZooAgente.appendChild(new Option(ag, ag));
+            });
+
             renderHistoricoJS();
             renderMapaJS();
             renderTabelaRotinaJS();
             renderTabelaPEJS();
         });
 
+        // ==========================================
+        // GERADOR DE RELATÓRIO DE ZOONOSE
+        // ==========================================
+        function gerarRelatorioZoonoseJS() {
+            const ag = document.getElementById('rel-zoo-agente').value;
+            let filtradas = vacinacoesDB;
+
+            if (ag !== "") {
+                filtradas = filtradas.filter(v => v.agente === ag);
+            }
+
+            let contCaes = 0;
+            let contGatos = 0;
+            let agentesZoo = {};
+
+            filtradas.forEach(v => {
+                contCaes += v.caes;
+                contGatos += v.gatos;
+                if(!agentesZoo[v.agente]) agentesZoo[v.agente] = { caes: 0, gatos: 0 };
+                agentesZoo[v.agente].caes += v.caes;
+                agentesZoo[v.agente].gatos += v.gatos;
+            });
+
+            document.getElementById('lbl-zoo-agente').innerText = ag === "" ? "TODOS OS AGENTES" : ag.toUpperCase();
+            document.getElementById('r-zoo-caes').innerText = contCaes;
+            document.getElementById('r-zoo-gatos').innerText = contGatos;
+            document.getElementById('r-zoo-total').innerText = contCaes + contGatos;
+
+            const divAgentes = document.getElementById('lista-agentes-zoonose');
+            divAgentes.innerHTML = '';
+            let temAgente = false;
+            for (const [nome, qtd] of Object.entries(agentesZoo)) {
+                temAgente = true;
+                let tot = qtd.caes + qtd.gatos;
+                divAgentes.innerHTML += `<div class="linha-rel"><span><i class="fa-solid fa-user text-muted me-1"></i> ${nome}</span><span class="badge rounded-pill bg-secondary">${tot} Animais Vacinados</span></div>`;
+            }
+            if (!temAgente) divAgentes.innerHTML = '<div class="text-muted py-2"><small>Nenhum registro encontrado neste filtro.</small></div>';
+
+            document.getElementById('resultado-relatorio-zoonose').style.display = 'block';
+        }
+
+        // ==========================================
+        // FUNÇÕES ANTIGAS PNCD (VISITAS/MAPAS)
+        // ==========================================
         function renderTabelaRotinaJS() {
             const tbody = document.getElementById('tbody-rotina'); const sem = document.getElementById('filtro-rotina-semana').value; const bairro = document.getElementById('filtro-rotina-bairro').value; const ag = document.getElementById('filtro-rotina-agente').value;
             let filtradas = visitasDB.filter(v => v.tipo !== 'PE');
