@@ -23,7 +23,6 @@
         .icon-box { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
         #map { height: 450px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 2px solid #fff; }
         
-        /* Estilos do Relatório Oficial */
         .caixa-filtro { background-color: #f1f3f5; border-radius: 12px; padding: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .btn-calcular { background-color: #78909c; color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
         .btn-calcular:hover { background-color: #607d8b; color: white; }
@@ -35,7 +34,6 @@
         .linha-rel .valor { font-weight: bold; color: #1565c0; }
         .linha-rel.total { font-weight: bold; color: #333; border-top: 2px solid #cfd8dc; margin-top: 5px; }
 
-        /* Estilos EXATOS do App Mobile para o Histórico */
         .input-mobile { position: relative; border: 2px solid #1E3A8A; border-radius: 12px; padding: 10px 15px; background: white; display: flex; align-items: center; }
         .input-mobile-label { position: absolute; top: -10px; left: 15px; background: white; padding: 0 5px; font-size: 12px; color: #6b7280; }
         .bairro-header { background-color: #e8f5e9; color: #2e7d32; font-weight: 900; letter-spacing: 0.5px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-radius: 6px 6px 0 0; }
@@ -116,8 +114,24 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="card stat-card bg-white p-3">
-                    <h5 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-map-location-dot me-2"></i> Mapa de Focos (Amostras Coletadas)</h5>
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-map-location-dot me-2"></i> Mapa de Visitas (Varredura)</h5>
+                        <div class="d-flex gap-2">
+                            <select id="map-semana" class="form-select form-select-sm border border-secondary fw-bold" style="width: 150px;" onchange="renderMapaJS()">
+                                <option value="">Todas Semanas</option>
+                            </select>
+                            <select id="map-agente" class="form-select form-select-sm border border-secondary fw-bold" style="width: 180px;" onchange="renderMapaJS()">
+                                <option value="">Todos Agentes</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="mb-2 small text-muted">
+                        <i class="fa-solid fa-location-dot text-danger"></i> Foco | 
+                        <i class="fa-solid fa-location-dot text-success"></i> Normal | 
+                        <i class="fa-solid fa-location-dot text-secondary"></i> Fechada/Recusa
+                    </div>
                     <div id="map"></div>
                 </div>
             </div>
@@ -180,17 +194,15 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-secondary"><i class="fa-solid fa-clock-rotate-left me-2 text-success"></i> Histórico Agrupado</h2>
                 </div>
-                
                 <div class="card stat-card bg-white p-4 border-top border-success border-4 mb-4">
                     <div class="input-mobile mb-2" style="max-width: 400px;">
                         <span class="input-mobile-label fw-bold">Filtrar por Semana Epidemiológica</span>
                         <i class="fa-regular fa-calendar-days text-success fs-4 me-3"></i>
                         <select id="hist-semana" class="form-select border-0 shadow-none fw-bold text-dark fs-5 p-0 bg-transparent" onchange="renderHistoricoJS()">
                             <option value="">Todas as Semanas do Ano</option>
-                            </select>
+                        </select>
                     </div>
                 </div>
-
                 <div id="resultado-historico"></div>
             </div>
 
@@ -199,7 +211,6 @@
                     <h2 class="fw-bold text-secondary"><i class="fa-solid fa-file-pdf me-2 text-primary"></i> Resumo Semanal - PNCD</h2>
                     <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print me-2"></i> Imprimir Relatório</button>
                 </div>
-                
                 <div class="caixa-filtro mb-4">
                     <select id="rel-bairro" class="form-select mb-3 border-0 py-3 text-muted fw-bold">
                         <option value="">Selecione o Bairro</option>
@@ -214,17 +225,14 @@
                         <option value="Cristo Rei">Cristo Rei</option>
                         <option value="Setor Sul">Setor Sul</option>
                     </select>
-
                     <select id="rel-semana" class="form-select mb-3 border-0 py-3 text-muted fw-bold">
                         <option value="">Selecione a Semana Epidemiológica</option>
                     </select>
-
                     <label class="text-muted small ms-2">Tipo de Relatório</label>
                     <select id="rel-tipo" class="form-select mb-4 border-0 py-3 text-dark fw-bold">
                         <option value="Rotina Geral (Inclui PE)">Rotina Geral (Inclui PE)</option>
                         <option value="Apenas PE">Apenas Pontos Estratégicos (PE)</option>
                     </select>
-
                     <button class="btn-calcular w-100 py-3" onclick="gerarFechamentoJS()">
                         <i class="fa-solid fa-calculator me-2"></i> Calcular Fechamento
                     </button>
@@ -232,10 +240,8 @@
 
                 <div id="resultado-relatorio" style="display: none;">
                     <div class="titulo-relatorio mb-4">
-                        Vila Rica - MT | Bairro: <span id="lbl-bairro"></span> | Semana: <span id="lbl-semana"></span><br>
-                        Tipo: <span id="lbl-tipo"></span>
+                        Vila Rica - MT | Bairro: <span id="lbl-bairro"></span> | Semana: <span id="lbl-semana"></span><br>Tipo: <span id="lbl-tipo"></span>
                     </div>
-
                     <div class="row">
                         <div class="col-md-6 col-lg-4">
                             <div class="card-relatorio border">
@@ -247,13 +253,11 @@
                                 <div class="linha-rel"><span>Outro</span><span class="valor" id="r-Outro">0</span></div>
                                 <div class="linha-rel total"><span>TOTAL GERAL</span><span class="valor" id="r-TotalImoveis">0</span></div>
                             </div>
-                            
                             <div class="card-relatorio border">
                                 <h5>Produtividade por Agente</h5>
                                 <div id="lista-agentes"></div>
                             </div>
                         </div>
-
                         <div class="col-md-6 col-lg-4">
                             <div class="card-relatorio border">
                                 <h5>Situação / Pendências</h5>
@@ -261,14 +265,12 @@
                                 <div class="linha-rel"><span>Fechados</span><span class="valor text-dark" id="r-F">0</span></div>
                                 <div class="linha-rel"><span>Recusados</span><span class="valor text-danger" id="r-Rec">0</span></div>
                             </div>
-
                             <div class="card-relatorio border">
                                 <h5>Ações (Focos)</h5>
                                 <div class="linha-rel"><span class="text-danger fw-bold"><i class="fa-solid fa-vial-virus"></i> Tubitos Coletados</span><span class="valor text-danger" id="r-Tubitos">0</span></div>
                                 <div class="linha-rel"><span class="text-success fw-bold"><i class="fa-solid fa-trash-can"></i> Dep. Eliminados</span><span class="valor text-success" id="r-Eliminados">0</span></div>
                             </div>
                         </div>
-
                         <div class="col-md-12 col-lg-4">
                             <div class="card-relatorio border">
                                 <h5>Depósitos Inspecionados</h5>
@@ -341,39 +343,84 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
-        // ----------------------------------------------------
-        // MOTOR DE DADOS JAVASCRIPT
-        // ----------------------------------------------------
-        
         const visitasDB = JSON.parse('{{ visitas_json|escapejs }}');
+        let map;
+        let markerLayer;
         
+        // Ícones do Mapa
+        const iconeFoco = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+        const iconeNormal = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+        const iconeFechada = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+
         document.addEventListener('DOMContentLoaded', function() {
-            var map = L.map('map').setView([-10.0116, -51.1186], 13);
+            // Inicia o Mapa
+            map = L.map('map').setView([-10.0116, -51.1186], 13);
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-            var marcadores = JSON.parse('{{ marcadores_json|escapejs }}');
-            var iconeVermelho = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
-            marcadores.forEach(function(m) { if(m.lat && m.lng) { L.marker([m.lat, m.lng], {icon: iconeVermelho}).addTo(map).bindPopup('<b>Foco Encontrado!</b><br>' + m.descricao); } });
             
+            // Corrige o bug do mapa ao trocar de aba
             var triggerTabList = [].slice.call(document.querySelectorAll('#menu-tabs button'))
             triggerTabList.forEach(function (triggerEl) {
                 var tabTrigger = new bootstrap.Tab(triggerEl)
                 triggerEl.addEventListener('shown.bs.tab', function (event) { if(event.target.id === 'tab-dashboard'){ setTimeout(function(){ map.invalidateSize(); }, 100); } })
             });
 
-            // Preenche as 52 Semanas FIXO (Para não faltar nenhuma)
+            // Preenche Dropdowns
             const selectRelSemana = document.getElementById('rel-semana');
             const selectHistSemana = document.getElementById('hist-semana');
+            const selectMapSemana = document.getElementById('map-semana');
+            const selectMapAgente = document.getElementById('map-agente');
             
+            // Popula Semanas
             for(let i=1; i<=52; i++) {
                 let opt1 = document.createElement('option'); opt1.value = i.toString(); opt1.text = `Semana ${i}`; selectRelSemana.appendChild(opt1);
                 let opt2 = document.createElement('option'); opt2.value = i.toString(); opt2.text = `Semana ${i}`; selectHistSemana.appendChild(opt2);
+                let opt3 = document.createElement('option'); opt3.value = i.toString(); opt3.text = `Semana ${i}`; selectMapSemana.appendChild(opt3);
             }
 
+            // Popula Agentes no Mapa
+            let agentesUnicos = [...new Set(visitasDB.map(v => v.agente))].filter(n => n && n !== "Sem Agente").sort();
+            agentesUnicos.forEach(ag => {
+                let opt = document.createElement('option'); opt.value = ag; opt.text = ag; selectMapAgente.appendChild(opt);
+            });
+
             renderHistoricoJS();
+            renderMapaJS();
         });
 
         // ========================================================
-        // MÁGICA DO HISTÓRICO AGRUPADO (4 NÍVEIS IDÊNTICO AO APP)
+        // 1. MÁGICA DO MAPA COM FILTROS
+        // ========================================================
+        function renderMapaJS() {
+            if(markerLayer) { map.removeLayer(markerLayer); }
+            markerLayer = L.layerGroup().addTo(map);
+
+            const sem = document.getElementById('map-semana').value;
+            const ag = document.getElementById('map-agente').value;
+
+            visitasDB.forEach(v => {
+                if(v.lat && v.lng) {
+                    if (sem !== "" && v.semana !== sem) return;
+                    if (ag !== "" && v.agente !== ag) return;
+
+                    let icone = iconeNormal;
+                    let txtStatus = 'Normal (Inspecionado)';
+                    
+                    if (v.tubitos > 0) { 
+                        icone = iconeFoco; 
+                        txtStatus = 'Foco de Dengue!'; 
+                    } else if (v.status === 'F' || v.status === 'R') { 
+                        icone = iconeFechada; 
+                        txtStatus = v.status === 'F' ? 'Fechada' : 'Recusada'; 
+                    }
+
+                    let desc = `<b>${txtStatus}</b><br>Nº ${v.numero} - ${v.endereco}<br>Agente: ${v.agente}<br>Tubitos: ${v.tubitos}<br><small>Data: ${v.data_visita}</small>`;
+                    L.marker([v.lat, v.lng], {icon: icone}).bindPopup(desc).addTo(markerLayer);
+                }
+            });
+        }
+
+        // ========================================================
+        // 2. MÁGICA DO HISTÓRICO AGRUPADO
         // ========================================================
         function renderHistoricoJS() {
             const semanaSelecionada = document.getElementById('hist-semana').value;
@@ -389,7 +436,6 @@
                 return;
             }
 
-            // Agrupamento: Bairro -> Quarteirão -> Rua -> Imóvel
             let agrupado = {};
             filtradas.forEach(v => {
                 let b = (v.bairro || "Sem Bairro").toUpperCase();
@@ -418,7 +464,6 @@
             Object.keys(agrupado).sort().forEach(bairro => {
                 let dadosBairro = agrupado[bairro];
                 
-                // 1. CABEÇALHO DO BAIRRO (Verde igual à imagem)
                 html += `
                 <div class="bairro-header mt-4 mb-2">
                     <span>${bairro}</span>
@@ -439,7 +484,6 @@
                     let ruas = dadosBairro.quarteiroes[quart];
                     let itemAccId = `col-${bId}-${qId++}`;
 
-                    // 2. CARD DO QUARTEIRÃO (Com a hashtag verde)
                     html += `
                     <div class="accordion-item border mb-3 shadow-sm rounded-4 overflow-hidden">
                         <h2 class="accordion-header">
@@ -455,7 +499,6 @@
                     Object.keys(ruas).sort().forEach(rua => {
                         let imoveis = ruas[rua];
                         
-                        // 3. FAIXA DA RUA (Cinza com pin vermelho)
                         html += `
                                 <div class="px-4 py-2 border-bottom border-top" style="background-color: #f1f5f9;">
                                     <i class="fa-solid fa-map-pin me-2" style="color: #e53935;"></i> 
@@ -467,7 +510,6 @@
                             let imovel = imoveis[imId];
                             let iconHome = imovel.tipo === 'PE' ? 'fa-industry' : 'fa-house';
                             
-                            // 4. CARD DO IMÓVEL (Casinha azul e detalhes)
                             html += `
                                 <div class="card m-3 shadow-sm border rounded-4 overflow-hidden">
                                     <div class="card-body p-3">
@@ -485,12 +527,10 @@
                                         </div>
                             `;
 
-                            // 5. DETALHES DA VISITA
                             imovel.visitas.forEach(v => {
                                 let txtStatus = v.status === 'N' ? 'N' : (v.status === 'F' ? 'F' : 'R');
                                 let corIcon = v.status === 'N' ? '#4caf50' : '#e53935';
                                 let iconStatus = v.status === 'N' ? 'fa-circle-check' : 'fa-circle-xmark';
-                                let dataFmt = v.data_visita && v.data_visita !== "S/D" ? v.data_visita : "Sem Data";
 
                                 html += `
                                         <div class="mt-3 pt-3 border-top">
@@ -499,7 +539,7 @@
                                                 <i class="fa-solid ${iconStatus} fs-5" style="color: ${corIcon};"></i>
                                             </div>
                                             <div class="d-flex align-items-center text-muted small mb-1">
-                                                <i class="fa-regular fa-calendar-days me-2 text-danger"></i> ${dataFmt}
+                                                <i class="fa-regular fa-calendar-days me-2 text-danger"></i> ${v.data_visita}
                                             </div>
                                             <div class="text-muted small mb-1">
                                                 Tubitos: ${v.tubitos}
@@ -511,18 +551,11 @@
                                 `;
                             });
 
-                            html += `
-                                    </div>
-                                </div>
-                            `;
+                            html += `</div></div>`;
                         });
                     });
 
-                    html += `
-                            </div>
-                        </div>
-                    </div>
-                    `;
+                    html += `</div></div></div>`;
                 });
                 html += `</div></div>`; 
             });
@@ -531,17 +564,14 @@
         }
 
         // ==========================================
-        // GERADOR DE RELATÓRIO PNCD
+        // 3. GERADOR DE RELATÓRIO PNCD
         // ==========================================
         function gerarFechamentoJS() {
             const bairro = document.getElementById('rel-bairro').value;
             const semana = document.getElementById('rel-semana').value;
             const tipoRelatorio = document.getElementById('rel-tipo').value;
 
-            if (!bairro || !semana) {
-                alert('Atenção: Selecione o Bairro e a Semana Epidemiológica para gerar o relatório!');
-                return;
-            }
+            if (!bairro || !semana) { alert('Atenção: Selecione o Bairro e a Semana Epidemiológica para gerar o relatório!'); return; }
 
             let contadores = { R: 0, C: 0, TB: 0, PE: 0, Outros: 0, N: 0, F: 0, Rec: 0, A1: 0, A2: 0, B: 0, C_dep: 0, D1: 0, D2: 0, E: 0, tubitos: 0, eliminados: 0 };
             let agentes = {};
@@ -561,22 +591,16 @@
                 }
             });
 
-            document.getElementById('lbl-bairro').innerText = bairro;
-            document.getElementById('lbl-semana').innerText = semana;
-            document.getElementById('lbl-tipo').innerText = tipoRelatorio.toUpperCase();
+            document.getElementById('lbl-bairro').innerText = bairro; document.getElementById('lbl-semana').innerText = semana; document.getElementById('lbl-tipo').innerText = tipoRelatorio.toUpperCase();
 
             document.getElementById('r-R').innerText = contadores.R; document.getElementById('r-C').innerText = contadores.C; document.getElementById('r-TB').innerText = contadores.TB; document.getElementById('r-PE').innerText = contadores.PE; document.getElementById('r-Outro').innerText = contadores.Outros; document.getElementById('r-TotalImoveis').innerText = (contadores.R + contadores.C + contadores.TB + contadores.PE + contadores.Outros);
             document.getElementById('r-N').innerText = contadores.N; document.getElementById('r-F').innerText = contadores.F; document.getElementById('r-Rec').innerText = contadores.Rec;
             document.getElementById('r-A1').innerText = contadores.A1; document.getElementById('r-A2').innerText = contadores.A2; document.getElementById('r-B').innerText = contadores.B; document.getElementById('r-Cdep').innerText = contadores.C_dep; document.getElementById('r-D1').innerText = contadores.D1; document.getElementById('r-D2').innerText = contadores.D2; document.getElementById('r-E').innerText = contadores.E; document.getElementById('r-TotalDep').innerText = (contadores.A1 + contadores.A2 + contadores.B + contadores.C_dep + contadores.D1 + contadores.D2 + contadores.E);
             document.getElementById('r-Tubitos').innerText = contadores.tubitos; document.getElementById('r-Eliminados').innerText = contadores.eliminados;
 
-            const divAgentes = document.getElementById('lista-agentes');
-            divAgentes.innerHTML = '';
+            const divAgentes = document.getElementById('lista-agentes'); divAgentes.innerHTML = '';
             let temAgente = false;
-            for (const [nome, qtd] of Object.entries(agentes)) {
-                temAgente = true;
-                divAgentes.innerHTML += `<div class="linha-rel"><span><i class="fa-solid fa-user text-muted me-1"></i> ${nome}</span><span class="badge bg-primary rounded-pill">${qtd}</span></div>`;
-            }
+            for (const [nome, qtd] of Object.entries(agentes)) { temAgente = true; divAgentes.innerHTML += `<div class="linha-rel"><span><i class="fa-solid fa-user text-muted me-1"></i> ${nome}</span><span class="badge bg-primary rounded-pill">${qtd}</span></div>`; }
             if (!temAgente) divAgentes.innerHTML = '<div class="text-muted py-2"><small>Nenhum agente registrou visitas neste filtro.</small></div>';
 
             document.getElementById('resultado-relatorio').style.display = 'block';

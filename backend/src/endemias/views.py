@@ -62,9 +62,21 @@ def dashboard_supervisor(request):
     visitas_pe = Visita.objects.filter(imovel__tipo='PE').select_related('imovel', 'agente').order_by('-data_visita')[:500]
     todas_visitas = Visita.objects.select_related('imovel', 'agente').order_by('imovel__bairro', 'imovel__quarteirao', '-data_visita')
     
-    # ---> CORREÇÃO: Pacote de dados agora leva TUDO (Rua, Número, Quarteirão, ID)
+    # PACOTE DE DADOS GERAL (AGORA COM COORDENADAS)
     visitas_json_list = []
     for v in todas_visitas:
+        lat, lng = None, None
+        try:
+            lat_val = getattr(v.imovel, 'latitude', None)
+            lng_val = getattr(v.imovel, 'longitude', None)
+            if hasattr(v.imovel, 'localizacao') and v.imovel.localizacao:
+                lng_val = getattr(v.imovel.localizacao, 'x', lng_val)
+                lat_val = getattr(v.imovel.localizacao, 'y', lat_val)
+            if lat_val is not None and lng_val is not None:
+                lat = float(lat_val)
+                lng = float(lng_val)
+        except: pass
+
         visitas_json_list.append({
             'id': v.id,
             'semana': str(getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1))),
@@ -85,25 +97,12 @@ def dashboard_supervisor(request):
             'dep_E': getattr(v, 'dep_E', 0) or 0,
             'tubitos': getattr(v, 'amostras_coletadas', 0) or 0,
             'eliminados': getattr(v, 'depositos_eliminados', 0) or 0,
-            'agente': getattr(v.agente, 'nome', 'Sem Agente') if v.agente else 'Sem Agente'
+            'agente': getattr(v.agente, 'nome', 'Sem Agente') if v.agente else 'Sem Agente',
+            'lat': lat,
+            'lng': lng
         })
     visitas_json = json.dumps(visitas_json_list)
-
-    marcadores = []
-    for visita in visitas_com_foco:
-        try:
-            lat = getattr(visita.imovel, 'latitude', None)
-            lng = getattr(visita.imovel, 'longitude', None)
-            if hasattr(visita.imovel, 'localizacao') and visita.imovel.localizacao:
-                lng = getattr(visita.imovel.localizacao, 'x', lng)
-                lat = getattr(visita.imovel.localizacao, 'y', lat)
-            if lat is not None and lng is not None:
-                marcadores.append({'lat': float(lat), 'lng': float(lng), 'descricao': f"Tubitos: {visita.amostras_coletadas} <br>Data: {visita.data_visita.strftime('%d/%m/%Y')}"})
-        except Exception: continue
-
-    marcadores_json = json.dumps(marcadores)
     
-    # Criando os mesmos relatórios pro Django não chiar (embora o JS faça isso agora)
     relatorios_dict = {}
     for v in todas_visitas:
         sem = str(getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1)))
@@ -148,8 +147,7 @@ def dashboard_supervisor(request):
 
     contexto = {
         'total_visitas': total_visitas, 'focos_dengue': focos_dengue, 'agentes_ativos': agentes_ativos,
-        'agentes_lista': agentes_lista, 'marcadores_json': marcadores_json,
-        'visitas_rotina': visitas_rotina, 'visitas_pe': visitas_pe,
+        'agentes_lista': agentes_lista, 'visitas_rotina': visitas_rotina, 'visitas_pe': visitas_pe,
         'todas_visitas': todas_visitas, 'visitas_json': visitas_json, 'lista_relatorios': lista_relatorios
     }
     return render(request, 'dashboard.html', contexto)
