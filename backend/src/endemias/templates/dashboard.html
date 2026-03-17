@@ -22,15 +22,7 @@
         .stat-card:hover { transform: translateY(-5px); }
         .icon-box { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
         
-        /* O MAPA AGORA CALCULA O TAMANHO DA TELA AUTOMATICAMENTE */
-        #map { 
-            height: calc(100vh - 300px); 
-            min-height: 500px; 
-            border-radius: 12px; 
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-            border: 2px solid #fff; 
-            z-index: 1;
-        }
+        #map { height: calc(100vh - 300px); min-height: 500px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 2px solid #fff; z-index: 1;}
         
         .caixa-filtro { background-color: #f1f3f5; border-radius: 12px; padding: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .btn-calcular { background-color: #78909c; color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
@@ -48,6 +40,9 @@
         .bairro-header { background-color: #e8f5e9; color: #2e7d32; font-weight: 900; letter-spacing: 0.5px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-radius: 6px 6px 0 0; }
         .bairro-badge { background-color: #388e3c; color: white; border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: bold; }
         
+        .tabela-container { max-height: 600px; overflow-y: auto; }
+        .tabela-container thead th { position: sticky; top: 0; background-color: #f8f9fa; z-index: 2; box-shadow: 0 2px 2px -1px rgba(0, 0, 0, 0.1); }
+
         @media print {
             .sidebar, .btn, .caixa-filtro, .alert, .input-mobile { display: none !important; }
             .main-content { margin-left: 0; padding: 0; }
@@ -147,54 +142,52 @@
             </div>
 
             <div class="tab-pane fade" id="conteudo-rotina" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="fw-bold text-secondary"><i class="fa-solid fa-house-chimney-medical me-2"></i> Inspeções de Rotina</h2>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                    <h2 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-house-chimney-medical me-2"></i> Inspeções de Rotina</h2>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <select id="filtro-rotina-semana" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()">
+                            <option value="">Todas Semanas</option>
+                        </select>
+                        <select id="filtro-rotina-bairro" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()">
+                            <option value="">Todos Bairros</option>
+                        </select>
+                        <select id="filtro-rotina-agente" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()">
+                            <option value="">Todos Agentes</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="card stat-card bg-white p-4">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light"><tr><th>Data / Hora</th><th>Agente</th><th>Endereço do Imóvel</th><th>Bairro</th><th>Status</th><th class="text-center">Tubitos</th></tr></thead>
-                            <tbody>
-                                {% for visita in visitas_rotina %}
-                                <tr>
-                                    <td class="text-secondary fw-bold">{% if visita.data_visita %}{{ visita.data_visita|date:"d/m/Y H:i" }}{% else %}S/D{% endif %}</td>
-                                    <td><i class="fa-solid fa-user-check text-success me-2"></i>{{ visita.agente.nome|default:"-" }}</td>
-                                    <td><strong>{{ visita.imovel.endereco }}</strong>, Nº {{ visita.imovel.numero }}<br><small class="text-muted">Quadra: {{ visita.imovel.quarteirao }}</small></td>
-                                    <td>{{ visita.imovel.bairro }}</td>
-                                    <td>{% if visita.status == 'N' %}<span class="badge bg-success">Normal</span>{% elif visita.status == 'F' %}<span class="badge bg-warning text-dark">Fechada</span>{% elif visita.status == 'R' %}<span class="badge bg-danger">Recusada</span>{% else %}<span class="badge bg-secondary">{{ visita.status }}</span>{% endif %}</td>
-                                    <td class="text-center">{% if visita.amostras_coletadas > 0 %}<span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> {{ visita.amostras_coletadas }}</span>{% else %}<span class="badge bg-light text-dark border fs-6">0</span>{% endif %}</td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="6" class="text-center text-muted py-5"><i class="fa-solid fa-clipboard-check fa-3x mb-3 text-light"></i><br><h5>Nenhuma visita registrada.</h5></td></tr>
-                                {% endfor %}
-                            </tbody>
+                    <div class="table-responsive tabela-container">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light"><tr><th>Data / Hora</th><th>Agente Responsável</th><th>Endereço do Imóvel</th><th>Bairro</th><th>Status</th><th class="text-center">Tubitos</th></tr></thead>
+                            <tbody id="tbody-rotina">
+                                </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
             <div class="tab-pane fade" id="conteudo-pe" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="fw-bold text-secondary"><i class="fa-solid fa-industry me-2 text-danger"></i> Inspeções de Pontos Estratégicos (P.E.)</h2>
+                <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
+                    <h2 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-industry me-2 text-danger"></i> Pontos Estratégicos (P.E.)</h2>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <select id="filtro-pe-semana" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()">
+                            <option value="">Todas Semanas</option>
+                        </select>
+                        <select id="filtro-pe-bairro" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()">
+                            <option value="">Todos Bairros</option>
+                        </select>
+                        <select id="filtro-pe-agente" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()">
+                            <option value="">Todos Agentes</option>
+                        </select>
+                    </div>
                 </div>
                 <div class="card stat-card bg-white p-4 border-start border-danger border-4">
-                    <div class="table-responsive">
-                        <table class="table table-hover align-middle">
-                            <thead class="table-light"><tr><th>Data / Hora</th><th>Agente</th><th>Endereço do P.E.</th><th>Bairro</th><th>Status</th><th class="text-center">Tubitos</th></tr></thead>
-                            <tbody>
-                                {% for visita in visitas_pe %}
-                                <tr>
-                                    <td class="text-secondary fw-bold">{% if visita.data_visita %}{{ visita.data_visita|date:"d/m/Y H:i" }}{% else %}S/D{% endif %}</td>
-                                    <td><i class="fa-solid fa-user-check text-danger me-2"></i>{{ visita.agente.nome|default:"-" }}</td>
-                                    <td><strong>{{ visita.imovel.endereco }}</strong>, Nº {{ visita.imovel.numero }}<br><small class="text-muted">Quadra: {{ visita.imovel.quarteirao }}</small></td>
-                                    <td>{{ visita.imovel.bairro }}</td>
-                                    <td>{% if visita.status == 'N' %}<span class="badge bg-success">Normal</span>{% elif visita.status == 'F' %}<span class="badge bg-warning text-dark">Fechada</span>{% elif visita.status == 'R' %}<span class="badge bg-danger">Recusada</span>{% else %}<span class="badge bg-secondary">{{ visita.status }}</span>{% endif %}</td>
-                                    <td class="text-center">{% if visita.amostras_coletadas > 0 %}<span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> {{ visita.amostras_coletadas }}</span>{% else %}<span class="badge bg-light text-dark border fs-6">0</span>{% endif %}</td>
-                                </tr>
-                                {% empty %}
-                                <tr><td colspan="6" class="text-center text-muted py-5"><i class="fa-solid fa-industry fa-3x mb-3 text-light"></i><br><h5>Nenhuma visita a Ponto Estratégico registrada.</h5></td></tr>
-                                {% endfor %}
-                            </tbody>
+                    <div class="table-responsive tabela-container">
+                        <table class="table table-hover align-middle mb-0">
+                            <thead class="table-light"><tr><th>Data / Hora</th><th>Agente Responsável</th><th>Endereço do P.E.</th><th>Bairro</th><th>Status</th><th class="text-center">Tubitos</th></tr></thead>
+                            <tbody id="tbody-pe">
+                                </tbody>
                         </table>
                     </div>
                 </div>
@@ -353,6 +346,7 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
+        // RECEBE O PACOTE DE VISITAS DO PYTHON
         const visitasDB = JSON.parse('{{ visitas_json|escapejs }}');
         let map;
         let markerLayer;
@@ -363,23 +357,14 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             
+            // MAPA
             var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
             var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
             var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
             var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' });
 
-            map = L.map('map', {
-                center: [-10.0116, -51.1186],
-                zoom: 13,
-                layers: [googleStreets]
-            });
-
-            var baseMaps = {
-                "Google Ruas (Padrão)": googleStreets,
-                "Google Satélite (Puro)": googleSat,
-                "Google Satélite + Nomes": googleHybrid,
-                "OpenStreetMap": osmLayer
-            };
+            map = L.map('map', { center: [-10.0116, -51.1186], zoom: 13, layers: [googleStreets] });
+            var baseMaps = { "Google Ruas (Padrão)": googleStreets, "Google Satélite (Puro)": googleSat, "Google Satélite + Nomes": googleHybrid, "OpenStreetMap": osmLayer };
             L.control.layers(baseMaps).addTo(map);
 
             var triggerTabList = [].slice.call(document.querySelectorAll('#menu-tabs button'))
@@ -388,26 +373,115 @@
                 triggerEl.addEventListener('shown.bs.tab', function (event) { if(event.target.id === 'tab-dashboard'){ setTimeout(function(){ map.invalidateSize(); }, 100); } })
             });
 
+            // PREENCHIMENTO DOS SELECTS DE FILTROS EM TODAS AS ABAS
             const selectRelSemana = document.getElementById('rel-semana');
             const selectHistSemana = document.getElementById('hist-semana');
             const selectMapSemana = document.getElementById('map-semana');
-            const selectMapAgente = document.getElementById('map-agente');
+            const selectRotinaSemana = document.getElementById('filtro-rotina-semana');
+            const selectPESemana = document.getElementById('filtro-pe-semana');
             
             for(let i=1; i<=52; i++) {
-                let opt1 = document.createElement('option'); opt1.value = i.toString(); opt1.text = `Semana ${i}`; selectRelSemana.appendChild(opt1);
-                let opt2 = document.createElement('option'); opt2.value = i.toString(); opt2.text = `Semana ${i}`; selectHistSemana.appendChild(opt2);
-                let opt3 = document.createElement('option'); opt3.value = i.toString(); opt3.text = `Semana ${i}`; selectMapSemana.appendChild(opt3);
+                let sNum = i.toString(); let txt = `Semana ${i}`;
+                selectRelSemana.appendChild(new Option(txt, sNum));
+                selectHistSemana.appendChild(new Option(txt, sNum));
+                selectMapSemana.appendChild(new Option(txt, sNum));
+                selectRotinaSemana.appendChild(new Option(txt, sNum));
+                selectPESemana.appendChild(new Option(txt, sNum));
             }
 
             let agentesUnicos = [...new Set(visitasDB.map(v => v.agente))].filter(n => n && n !== "Sem Agente").sort();
+            const selectMapAgente = document.getElementById('map-agente');
+            const selectRotinaAgente = document.getElementById('filtro-rotina-agente');
+            const selectPEAgente = document.getElementById('filtro-pe-agente');
             agentesUnicos.forEach(ag => {
-                let opt = document.createElement('option'); opt.value = ag; opt.text = ag; selectMapAgente.appendChild(opt);
+                selectMapAgente.appendChild(new Option(ag, ag));
+                selectRotinaAgente.appendChild(new Option(ag, ag));
+                selectPEAgente.appendChild(new Option(ag, ag));
             });
 
+            let bairrosUnicos = [...new Set(visitasDB.map(v => v.bairro))].filter(n => n && n !== "Sem Bairro").sort();
+            const selectRotinaBairro = document.getElementById('filtro-rotina-bairro');
+            const selectPEBairro = document.getElementById('filtro-pe-bairro');
+            bairrosUnicos.forEach(b => {
+                selectRotinaBairro.appendChild(new Option(b, b));
+                selectPEBairro.appendChild(new Option(b, b));
+            });
+
+            // GERA TODAS AS TABELAS INICIAIS
             renderHistoricoJS();
             renderMapaJS();
+            renderTabelaRotinaJS();
+            renderTabelaPEJS();
         });
 
+        // ========================================================
+        // TABELAS ROTINA E PE JAVASCRIPT
+        // ========================================================
+        function renderTabelaRotinaJS() {
+            const tbody = document.getElementById('tbody-rotina');
+            const sem = document.getElementById('filtro-rotina-semana').value;
+            const bairro = document.getElementById('filtro-rotina-bairro').value;
+            const ag = document.getElementById('filtro-rotina-agente').value;
+
+            let filtradas = visitasDB.filter(v => v.tipo !== 'PE');
+            if (sem !== "") filtradas = filtradas.filter(v => v.semana === sem);
+            if (bairro !== "") filtradas = filtradas.filter(v => v.bairro === bairro);
+            if (ag !== "") filtradas = filtradas.filter(v => v.agente === ag);
+
+            let html = '';
+            if (filtradas.length === 0) {
+                html = `<tr><td colspan="6" class="text-center text-muted py-5"><i class="fa-solid fa-clipboard-check fa-3x mb-3 text-light"></i><br><h5>Nenhuma visita de rotina encontrada para este filtro.</h5></td></tr>`;
+            } else {
+                filtradas.forEach(v => {
+                    let badgeStatus = v.status === 'N' ? '<span class="badge bg-success">Normal</span>' : (v.status === 'F' ? '<span class="badge bg-warning text-dark">Fechada</span>' : '<span class="badge bg-danger">Recusada</span>');
+                    let badgeTubitos = v.tubitos > 0 ? `<span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> ${v.tubitos}</span>` : `<span class="badge bg-light text-dark border fs-6">0</span>`;
+                    html += `<tr>
+                        <td class="text-secondary fw-bold">${v.data_visita}</td>
+                        <td><i class="fa-solid fa-user-check text-success me-2"></i>${v.agente}</td>
+                        <td><strong>${v.endereco}</strong>, Nº ${v.numero}<br><small class="text-muted">Quadra: ${v.quarteirao}</small></td>
+                        <td>${v.bairro}</td>
+                        <td>${badgeStatus}</td>
+                        <td class="text-center">${badgeTubitos}</td>
+                    </tr>`;
+                });
+            }
+            tbody.innerHTML = html;
+        }
+
+        function renderTabelaPEJS() {
+            const tbody = document.getElementById('tbody-pe');
+            const sem = document.getElementById('filtro-pe-semana').value;
+            const bairro = document.getElementById('filtro-pe-bairro').value;
+            const ag = document.getElementById('filtro-pe-agente').value;
+
+            let filtradas = visitasDB.filter(v => v.tipo === 'PE');
+            if (sem !== "") filtradas = filtradas.filter(v => v.semana === sem);
+            if (bairro !== "") filtradas = filtradas.filter(v => v.bairro === bairro);
+            if (ag !== "") filtradas = filtradas.filter(v => v.agente === ag);
+
+            let html = '';
+            if (filtradas.length === 0) {
+                html = `<tr><td colspan="6" class="text-center text-muted py-5"><i class="fa-solid fa-industry fa-3x mb-3 text-light"></i><br><h5>Nenhuma visita a Ponto Estratégico encontrada.</h5></td></tr>`;
+            } else {
+                filtradas.forEach(v => {
+                    let badgeStatus = v.status === 'N' ? '<span class="badge bg-success">Normal</span>' : (v.status === 'F' ? '<span class="badge bg-warning text-dark">Fechada</span>' : '<span class="badge bg-danger">Recusada</span>');
+                    let badgeTubitos = v.tubitos > 0 ? `<span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> ${v.tubitos}</span>` : `<span class="badge bg-light text-dark border fs-6">0</span>`;
+                    html += `<tr>
+                        <td class="text-secondary fw-bold">${v.data_visita}</td>
+                        <td><i class="fa-solid fa-user-check text-danger me-2"></i>${v.agente}</td>
+                        <td><strong>${v.endereco}</strong>, Nº ${v.numero}<br><small class="text-muted">Quadra: ${v.quarteirao}</small></td>
+                        <td>${v.bairro}</td>
+                        <td>${badgeStatus}</td>
+                        <td class="text-center">${badgeTubitos}</td>
+                    </tr>`;
+                });
+            }
+            tbody.innerHTML = html;
+        }
+
+        // ========================================================
+        // MAPA
+        // ========================================================
         function renderMapaJS() {
             if(markerLayer) { map.removeLayer(markerLayer); }
             markerLayer = L.layerGroup().addTo(map);
@@ -437,6 +511,9 @@
             });
         }
 
+        // ========================================================
+        // HISTÓRICO AGRUPADO
+        // ========================================================
         function renderHistoricoJS() {
             const semanaSelecionada = document.getElementById('hist-semana').value;
             const container = document.getElementById('resultado-historico');
@@ -538,7 +615,6 @@
                                                     <span class="text-muted small">Visitas: ${imovel.visitas.length}</span>
                                                 </div>
                                             </div>
-                                            <i class="fa-solid fa-pencil fs-5" style="color: #fb8c00;"></i>
                                         </div>
                             `;
 
@@ -578,6 +654,9 @@
             container.innerHTML = html;
         }
 
+        // ==========================================
+        // RELATÓRIO PNCD
+        // ==========================================
         function gerarFechamentoJS() {
             const bairro = document.getElementById('rel-bairro').value;
             const semana = document.getElementById('rel-semana').value;
