@@ -130,7 +130,8 @@
                     <div class="mb-2 small text-muted">
                         <i class="fa-solid fa-location-dot text-danger"></i> Foco | 
                         <i class="fa-solid fa-location-dot text-success"></i> Normal | 
-                        <i class="fa-solid fa-location-dot text-secondary"></i> Fechada/Recusa
+                        <i class="fa-solid fa-location-dot text-secondary"></i> Fechada/Recusa |
+                        <i class="fa-solid fa-layer-group text-primary ms-2"></i> <b>Use o ícone de camadas no mapa para ver em Satélite</b>
                     </div>
                     <div id="map"></div>
                 </div>
@@ -352,9 +353,39 @@
         const iconeFechada = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
 
         document.addEventListener('DOMContentLoaded', function() {
-            map = L.map('map').setView([-10.0116, -51.1186], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
             
+            // ----------------------------------------------------
+            // CRIAÇÃO DAS CAMADAS DO MAPA (RUAS vs SATÉLITE)
+            // ----------------------------------------------------
+            var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
+                maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google'
+            });
+            var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+                maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google'
+            });
+            var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
+                maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google'
+            });
+            var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
+                attribution: '&copy; OpenStreetMap' 
+            });
+
+            // Inicia o mapa com a camada de Ruas do Google por padrão
+            map = L.map('map', {
+                center: [-10.0116, -51.1186],
+                zoom: 13,
+                layers: [googleStreets]
+            });
+
+            // Adiciona a caixinha de controle no canto superior direito do mapa
+            var baseMaps = {
+                "Google Ruas (Padrão)": googleStreets,
+                "Google Satélite (Puro)": googleSat,
+                "Google Satélite + Nomes": googleHybrid,
+                "OpenStreetMap": osmLayer
+            };
+            L.control.layers(baseMaps).addTo(map);
+
             var triggerTabList = [].slice.call(document.querySelectorAll('#menu-tabs button'))
             triggerTabList.forEach(function (triggerEl) {
                 var tabTrigger = new bootstrap.Tab(triggerEl)
@@ -382,7 +413,7 @@
         });
 
         // ========================================================
-        // 1. MÁGICA DO MAPA COM FILTROS
+        // MÁGICA DO MAPA COM FILTROS
         // ========================================================
         function renderMapaJS() {
             if(markerLayer) { map.removeLayer(markerLayer); }
@@ -414,7 +445,7 @@
         }
 
         // ========================================================
-        // 2. MÁGICA DO HISTÓRICO AGRUPADO
+        // MÁGICA DO HISTÓRICO AGRUPADO
         // ========================================================
         function renderHistoricoJS() {
             const semanaSelecionada = document.getElementById('hist-semana').value;
@@ -558,7 +589,7 @@
         }
 
         // ==========================================
-        // 3. GERADOR DE RELATÓRIO PNCD
+        // GERADOR DE RELATÓRIO PNCD
         // ==========================================
         function gerarFechamentoJS() {
             const bairro = document.getElementById('rel-bairro').value;
