@@ -9,7 +9,8 @@ class DatabaseHelper {
 
   Future<Database> get database async {
     if (_database != null) return _database!;
-    _database = await _initDB('endemias_offline_v4.db');
+    // ATENÇÃO: Versão 5 para forçar a criação da nova tabela de Vacinação!
+    _database = await _initDB('endemias_offline_v5.db');
     return _database!;
   }
 
@@ -20,12 +21,12 @@ class DatabaseHelper {
   }
 
   Future _createDB(Database db, int version) async {
-    // 1. GAVETA DE VISITAS
+    // 1. GAVETA DE VISITAS (PNCD)
     await db.execute('''
     CREATE TABLE visitas_offline (
       id_local INTEGER PRIMARY KEY AUTOINCREMENT,
       status TEXT,
-      imovel TEXT, -- Alterado para TEXT para suportar IDs temporários 'TEMP_X'
+      imovel TEXT,
       agente INTEGER,
       amostras_coletadas INTEGER,
       quantidade_larvas INTEGER,
@@ -67,11 +68,29 @@ class DatabaseHelper {
     )
     ''');
 
-    // 3. CACHE
+    // 3. CACHE DE SISTEMA
     await db.execute('CREATE TABLE cache (chave TEXT PRIMARY KEY, dados TEXT)');
+
+    // =========================================================================
+    // 4. NOVA GAVETA: VACINAÇÃO ANTIRRÁBICA
+    // =========================================================================
+    await db.execute('''
+    CREATE TABLE vacinacao_offline (
+      id_local INTEGER PRIMARY KEY AUTOINCREMENT,
+      agente_username TEXT,
+      localidade TEXT,
+      caes_vacinados INTEGER,
+      gatos_vacinados INTEGER,
+      data_vacinacao TEXT,
+      localizacao TEXT,
+      sincronizado INTEGER DEFAULT 0
+    )
+    ''');
   }
 
-  // FUNÇÕES CACHE
+  // =========================================================================
+  // FUNÇÕES DE CACHE
+  // =========================================================================
   Future<void> salvarCache(String chave, String dados) async {
     final db = await instance.database;
     await db.insert('cache', {
@@ -87,7 +106,9 @@ class DatabaseHelper {
     return null;
   }
 
-  // FUNÇÕES VISITAS
+  // =========================================================================
+  // FUNÇÕES DE VISITAS (PNCD)
+  // =========================================================================
   Future<int> inserirVisita(Map<String, dynamic> visita) async {
     final db = await instance.database;
     return await db.insert('visitas_offline', visita);
@@ -112,7 +133,6 @@ class DatabaseHelper {
     );
   }
 
-  // NOVA: Atualiza a visita que estava com ID temporário para o ID real do servidor
   Future<void> atualizarIdImovelNasVisitas(String idTemp, int idReal) async {
     final db = await instance.database;
     await db.update(
@@ -123,7 +143,9 @@ class DatabaseHelper {
     );
   }
 
-  // FUNÇÕES IMÓVEIS
+  // =========================================================================
+  // FUNÇÕES DE IMÓVEIS
+  // =========================================================================
   Future<int> inserirImovel(Map<String, dynamic> imovel) async {
     final db = await instance.database;
     return await db.insert('imoveis_offline', imovel);
@@ -142,6 +164,33 @@ class DatabaseHelper {
     final db = await instance.database;
     return await db.update(
       'imoveis_offline',
+      {'sincronizado': 1},
+      where: 'id_local = ?',
+      whereArgs: [idLocal],
+    );
+  }
+
+  // =========================================================================
+  // NOVAS FUNÇÕES: VACINAÇÃO ANTIRRÁBICA
+  // =========================================================================
+  Future<int> inserirVacinacao(Map<String, dynamic> vacinacao) async {
+    final db = await instance.database;
+    return await db.insert('vacinacao_offline', vacinacao);
+  }
+
+  Future<List<Map<String, dynamic>>> buscarVacinacoesPendentes() async {
+    final db = await instance.database;
+    return await db.query(
+      'vacinacao_offline',
+      where: 'sincronizado = ?',
+      whereArgs: [0],
+    );
+  }
+
+  Future<int> marcarVacinacaoComoSincronizada(int idLocal) async {
+    final db = await instance.database;
+    return await db.update(
+      'vacinacao_offline',
       {'sincronizado': 1},
       where: 'id_local = ?',
       whereArgs: [idLocal],

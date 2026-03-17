@@ -66,7 +66,7 @@ class EndemiasApp extends StatelessWidget {
 }
 
 // =============================================================================
-// TELA DE LOGIN COM CONFIGURAÇÃO DE NGROK E AUTENTICAÇÃO REAL
+// TELA DE LOGIN
 // =============================================================================
 class TelaLogin extends StatefulWidget {
   const TelaLogin({super.key});
@@ -389,6 +389,11 @@ class _TelaInicialState extends State<TelaInicial> {
     {"nome": "Setor Oeste", "imoveis": 1141, "quarteiroes": 63},
     {"nome": "Cristo Rei", "imoveis": 231, "quarteiroes": 14},
     {"nome": "Setor Sul", "imoveis": 708, "quarteiroes": 37},
+    {
+      "nome": "Zona Rural",
+      "imoveis": 999,
+      "quarteiroes": 1,
+    }, // Útil para vacinação
   ];
 
   Map<String, dynamic>? bairroSelecionado;
@@ -505,6 +510,8 @@ class _TelaInicialState extends State<TelaInicial> {
           sucessoVisitas++;
         }
       }
+
+      // TODO: Sincronizar Vacinações Antirrábicas (Implementaremos no próximo passo)
 
       if (imoveisPendentes.isEmpty && visitasPendentes.isEmpty) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -644,7 +651,7 @@ class _TelaInicialState extends State<TelaInicial> {
 
             DropdownButtonFormField<Map<String, dynamic>>(
               decoration: const InputDecoration(
-                labelText: 'Bairro de Trabalho',
+                labelText: 'Bairro / Localidade',
               ),
               initialValue: bairroSelecionado,
               items: bairrosVilaRica
@@ -654,7 +661,8 @@ class _TelaInicialState extends State<TelaInicial> {
                   .toList(),
               onChanged: (v) => setState(() => bairroSelecionado = v),
             ),
-            if (bairroSelecionado != null) ...[
+            if (bairroSelecionado != null &&
+                bairroSelecionado!['nome'] != 'Zona Rural') ...[
               const SizedBox(height: 10),
               Text(
                 'Meta: ${bairroSelecionado!['imoveis']} imóveis | ${bairroSelecionado!['quarteiroes']} quarteirões',
@@ -740,6 +748,25 @@ class _TelaInicialState extends State<TelaInicial> {
             ),
             const SizedBox(height: 12),
 
+            // ==========================================
+            // NOVO BOTÃO DE VACINAÇÃO ANTIRRÁBICA
+            // ==========================================
+            ElevatedButton.icon(
+              onPressed: () => Navigator.push(
+                context,
+                MaterialPageRoute(builder: (c) => TelaVacinacao()),
+              ),
+              icon: const Icon(Icons.pets, color: Colors.white),
+              label: const Text(
+                '4. Vacinação Antirrábica',
+                style: TextStyle(fontSize: 16, color: Colors.white),
+              ),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal[600],
+              ),
+            ),
+            const SizedBox(height: 12),
+
             ElevatedButton.icon(
               onPressed: () => Navigator.push(
                 context,
@@ -749,7 +776,7 @@ class _TelaInicialState extends State<TelaInicial> {
               ),
               icon: const Icon(Icons.history, color: Colors.white),
               label: const Text(
-                '4. Histórico Agrupado',
+                '5. Histórico Agrupado',
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
@@ -770,7 +797,7 @@ class _TelaInicialState extends State<TelaInicial> {
               ),
               icon: const Icon(Icons.picture_as_pdf, color: Colors.white),
               label: const Text(
-                '5. Gerar Relatórios',
+                '6. Gerar Relatórios',
                 style: TextStyle(fontSize: 16, color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(backgroundColor: Colors.blueGrey),
@@ -790,7 +817,7 @@ class _TelaInicialState extends State<TelaInicial> {
                     )
                   : const Icon(Icons.cloud_sync, color: Colors.white),
               label: Text(
-                _sincronizando ? 'Sincronizando...' : '6. Sincronizar Offline',
+                _sincronizando ? 'Sincronizando...' : '7. Sincronizar Offline',
                 style: const TextStyle(fontSize: 16, color: Colors.white),
               ),
               style: ElevatedButton.styleFrom(
@@ -805,7 +832,7 @@ class _TelaInicialState extends State<TelaInicial> {
 }
 
 // =============================================================================
-// TELA DE MAPEAMENTO E EDIÇÃO DE IMÓVEIS
+// TELA DE MAPEAMENTO DE IMÓVEIS (AGORA COM A OPÇÃO "OUTRO")
 // =============================================================================
 class TelaCadastroImovel extends StatefulWidget {
   final String nomeBairro;
@@ -835,12 +862,18 @@ class _TelaCadastroImovelState extends State<TelaCadastroImovel> {
       _num.text = widget.imovelExistente!['numero']?.toString() ?? '';
       _quart.text = widget.imovelExistente!['quarteirao']?.toString() ?? '';
       String sigla = widget.imovelExistente!['tipo'] ?? 'R';
+
       if (sigla == 'C')
         _tipo = 'Comercial';
       else if (sigla == 'TB')
         _tipo = 'Terreno Baldio';
       else if (sigla == 'PE')
         _tipo = 'Ponto Estratégico';
+      else if (sigla == 'O')
+        _tipo = 'Outro';
+      else
+        _tipo = 'Residencial';
+
       try {
         String loc = widget.imovelExistente!['localizacao'] ?? '';
         if (loc.contains('POINT')) {
@@ -970,6 +1003,10 @@ class _TelaCadastroImovelState extends State<TelaCadastroImovel> {
                   value: 'Ponto Estratégico',
                   child: Text('Ponto Estratégico'),
                 ),
+                DropdownMenuItem(
+                  value: 'Outro',
+                  child: Text('Outro'),
+                ), // AQUI ESTÁ O "OUTRO"
               ],
               onChanged: (String? newValue) =>
                   setState(() => _tipo = newValue!),
@@ -1003,6 +1040,7 @@ class _TelaCadastroImovelState extends State<TelaCadastroImovel> {
                         return;
                       }
                       setState(() => enviando = true);
+
                       String tipoSigla = 'R';
                       if (_tipo == 'Comercial')
                         tipoSigla = 'C';
@@ -1010,6 +1048,9 @@ class _TelaCadastroImovelState extends State<TelaCadastroImovel> {
                         tipoSigla = 'TB';
                       else if (_tipo == 'Ponto Estratégico')
                         tipoSigla = 'PE';
+                      else if (_tipo == 'Outro')
+                        tipoSigla = 'O';
+
                       var dadosImovel = {
                         "endereco": _end.text,
                         "numero": _num.text,
@@ -1116,7 +1157,228 @@ class _TelaCadastroImovelState extends State<TelaCadastroImovel> {
 }
 
 // =============================================================================
-// LISTA DE IMÓVEIS
+// NOVA TELA DE VACINAÇÃO ANTIRRÁBICA
+// =============================================================================
+class TelaVacinacao extends StatefulWidget {
+  @override
+  State<TelaVacinacao> createState() => _TelaVacinacaoState();
+}
+
+class _TelaVacinacaoState extends State<TelaVacinacao> {
+  bool enviando = false;
+  double? lat, lng;
+  final _localidadeController = TextEditingController();
+  final _caesController = TextEditingController(text: '0');
+  final _gatosController = TextEditingController(text: '0');
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('Vacinação Antirrábica'),
+        backgroundColor: Colors.teal[700],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(15),
+              decoration: BoxDecoration(
+                color: Colors.teal[50],
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: Colors.teal[200]!),
+              ),
+              child: const Text(
+                'Módulo de Zoonoses\nRegistre a quantidade de animais vacinados na localidade atual.',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.teal,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(height: 25),
+
+            TextFormField(
+              controller: _localidadeController,
+              decoration: const InputDecoration(
+                labelText: 'Endereço ou Localidade Manual',
+                prefixIcon: Icon(Icons.place, color: Colors.teal),
+              ),
+            ),
+            const SizedBox(height: 15),
+
+            OutlinedButton.icon(
+              onPressed: () async {
+                Position p = await Geolocator.getCurrentPosition();
+                setState(() {
+                  lat = p.latitude;
+                  lng = p.longitude;
+                });
+              },
+              icon: Icon(
+                lat == null ? Icons.gps_not_fixed : Icons.gps_fixed,
+                color: lat == null ? Colors.teal : Colors.green,
+              ),
+              label: Text(
+                lat == null
+                    ? 'Capturar Coordenada GPS'
+                    : 'GPS Capturado com Sucesso',
+                style: TextStyle(
+                  color: lat == null ? Colors.teal : Colors.green,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: BorderSide(
+                  color: lat == null ? Colors.teal : Colors.green,
+                  width: 2,
+                ),
+                padding: const EdgeInsets.symmetric(vertical: 16),
+              ),
+            ),
+            const SizedBox(height: 25),
+
+            Row(
+              children: [
+                Expanded(
+                  child: TextFormField(
+                    controller: _caesController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Cães Vacinados',
+                      prefixIcon: Icon(Icons.pets, color: Colors.brown),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 15),
+                Expanded(
+                  child: TextFormField(
+                    controller: _gatosController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: 'Gatos Vacinados',
+                      prefixIcon: Icon(Icons.pets, color: Colors.orange),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 40),
+
+            ElevatedButton(
+              onPressed: enviando
+                  ? null
+                  : () async {
+                      if (lat == null &&
+                          _localidadeController.text.trim().isEmpty) {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(
+                            content: Text(
+                              'Informe uma localidade ou capture o GPS!',
+                            ),
+                            backgroundColor: Colors.red,
+                          ),
+                        );
+                        return;
+                      }
+                      setState(() => enviando = true);
+
+                      try {
+                        String nomeAgenteCache =
+                            await DatabaseHelper.instance.lerCache(
+                              'agente_logado',
+                            ) ??
+                            "";
+                        var dadosVacinacao = {
+                          "agente_username": nomeAgenteCache,
+                          "localidade": _localidadeController.text,
+                          "caes_vacinados": int.parse(
+                            _caesController.text.isEmpty
+                                ? '0'
+                                : _caesController.text,
+                          ),
+                          "gatos_vacinados": int.parse(
+                            _gatosController.text.isEmpty
+                                ? '0'
+                                : _gatosController.text,
+                          ),
+                          "data_vacinacao": DateTime.now().toIso8601String(),
+                        };
+                        if (lat != null && lng != null) {
+                          dadosVacinacao["localizacao"] = "POINT($lng $lat)";
+                        }
+
+                        // TENTA ENVIAR PARA O SERVIDOR DIRETAMENTE
+                        final resp = await http
+                            .post(
+                              Uri.parse('$baseUrl/api/vacinacao/'),
+                              headers: {
+                                "Content-Type": "application/json",
+                                "ngrok-skip-browser-warning": "true",
+                              },
+                              body: jsonEncode(dadosVacinacao),
+                            )
+                            .timeout(const Duration(seconds: 5));
+
+                        if (resp.statusCode == 201 || resp.statusCode == 200) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(
+                              content: Text(
+                                'Vacinação Registrada com Sucesso!',
+                              ),
+                              backgroundColor: Colors.green,
+                            ),
+                          );
+                          if (mounted) Navigator.pop(context);
+                        } else {
+                          throw Exception("Erro no Servidor");
+                        }
+                      } catch (e) {
+                        // AVISO TEMPORÁRIO PARA O USUÁRIO
+                        showDialog(
+                          context: context,
+                          builder: (context) => AlertDialog(
+                            title: const Text('Aviso do Sistema'),
+                            content: const Text(
+                              'Para salvar as vacinações no Modo Offline e enviar para a nuvem, precisamos concluir a atualização do database_helper.dart e do Servidor Python (Passo 2 e 3).',
+                            ),
+                            actions: [
+                              TextButton(
+                                onPressed: () => Navigator.pop(context),
+                                child: const Text('ENTENDIDO'),
+                              ),
+                            ],
+                          ),
+                        );
+                        setState(() => enviando = false);
+                      }
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.teal[700],
+              ),
+              child: enviando
+                  ? const CircularProgressIndicator(color: Colors.white)
+                  : const Text(
+                      'SALVAR REGISTRO DE VACINAÇÃO',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// =============================================================================
+// LISTA DE IMÓVEIS E TELA DE VISITA (MANTIDOS IGUAIS)
 // =============================================================================
 class TelaListaImoveis extends StatefulWidget {
   final String nomeBairro;
@@ -1146,7 +1408,6 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
             headers: {"ngrok-skip-browser-warning": "true"},
           )
           .timeout(const Duration(seconds: 5));
-
       await DatabaseHelper.instance.salvarCache(
         'imoveis',
         utf8.decode(r.bodyBytes),
@@ -1214,14 +1475,12 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
             );
           if (!s.hasData)
             return const Center(child: CircularProgressIndicator());
-
           List<dynamic> imoveis = s.data!;
           Map<String, Map<String, List<dynamic>>> agrupado = {};
           for (int i = 1; i <= widget.totalQuarteiroes; i++) {
             String qStr = i.toString().padLeft(2, '0');
             agrupado[qStr] = {};
           }
-
           for (var im in imoveis) {
             String rawQ = im['quarteirao']?.toString().trim() ?? "";
             int? parsedQ = int.tryParse(rawQ);
@@ -1238,7 +1497,6 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
               agrupado[quarteirao]![rua] = [];
             agrupado[quarteirao]![rua]!.add(im);
           }
-
           List<String> quarteiroes = agrupado.keys.toList();
           quarteiroes.sort((a, b) {
             int? numA = int.tryParse(a);
@@ -1248,7 +1506,6 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
             if (numB != null) return 1;
             return a.compareTo(b);
           });
-
           return ListView.builder(
             itemCount: quarteiroes.length,
             itemBuilder: (context, index) {
@@ -1307,9 +1564,9 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
                                         0)
                                     .compareTo(
                                       int.tryParse(
-                                          b['numero']?.toString() ?? '0',
-                                        ) ??
-                                        0,
+                                            b['numero']?.toString() ?? '0',
+                                          ) ??
+                                          0,
                                     ),
                           );
                           return Column(
@@ -1396,9 +1653,6 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
   }
 }
 
-// =============================================================================
-// HISTÓRICO AGRUPADO
-// =============================================================================
 class TelaHistoricoVisitas extends StatefulWidget {
   final List<Map<String, dynamic>> semanas;
   const TelaHistoricoVisitas({super.key, required this.semanas});
@@ -1408,7 +1662,6 @@ class TelaHistoricoVisitas extends StatefulWidget {
 
 class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
   Map<String, dynamic>? _semanaSelecionada;
-
   Future<Map<String, Map<String, Map<String, Map<String, dynamic>>>>>
   _buscarAgrupado() async {
     List<dynamic> visitas = [];
@@ -1446,7 +1699,6 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
         throw Exception('Sem dados offline salvos.');
       }
     }
-
     final visitasPendentes = await DatabaseHelper.instance
         .buscarVisitasPendentes();
     for (var vp in visitasPendentes) {
@@ -1460,14 +1712,12 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
         "quantidade_larvas": vp['quantidade_larvas'],
       });
     }
-
     if (_semanaSelecionada != null)
       visitas = visitas
           .where(
             (v) => v['semana_epidemiologica'] == _semanaSelecionada!['semana'],
           )
           .toList();
-
     Map<String, dynamic> mapaImoveis = {
       for (var im in imoveis) im['id'].toString(): im,
     };
@@ -1475,9 +1725,7 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
     for (var ip in imPendentes) {
       mapaImoveis["TEMP_${ip['id_local']}"] = ip;
     }
-
     Map<String, Map<String, Map<String, Map<String, dynamic>>>> agrupado = {};
-
     for (var v in visitas) {
       var im = mapaImoveis[v['imovel'].toString()];
       if (im == null) continue;
@@ -1497,7 +1745,6 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
           : im['numero'].toString();
       String tipo = im['tipo'] ?? 'R';
       String imId = v['imovel'].toString();
-
       if (!agrupado.containsKey(bairro)) agrupado[bairro] = {};
       if (!agrupado[bairro]!.containsKey(quarteirao))
         agrupado[bairro]![quarteirao] = {};
@@ -1572,7 +1819,6 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                   );
-
                 return ListView.builder(
                   itemCount: bairros.length,
                   itemBuilder: (context, index) {
@@ -1598,7 +1844,6 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
                       if (numB != null) return 1;
                       return a.compareTo(b);
                     });
-
                     return Column(
                       children: [
                         Container(
@@ -1852,9 +2097,6 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
   }
 }
 
-// =============================================================================
-// FORMULÁRIO DE VISITA
-// =============================================================================
 class TelaVisita extends StatefulWidget {
   final dynamic imovelId;
   final String? enderecoDisplay;
@@ -1897,7 +2139,6 @@ class _TelaVisitaState extends State<TelaVisita> {
       _obs;
   String _status = 'N';
   int _totalDepositos = 0;
-
   void _calcularTotalDepositos() {
     setState(() {
       _totalDepositos =
@@ -2244,9 +2485,11 @@ class _TelaVisitaState extends State<TelaVisita> {
                   : () async {
                       setState(() => enviando = true);
                       try {
-                        String nomeAgenteCache = await DatabaseHelper.instance
-                            .lerCache('agente_logado') ?? "";
-
+                        String nomeAgenteCache =
+                            await DatabaseHelper.instance.lerCache(
+                              'agente_logado',
+                            ) ??
+                            "";
                         var d = {
                           "status": _status,
                           "imovel":
@@ -2417,9 +2660,6 @@ class _TelaVisitaState extends State<TelaVisita> {
   }
 }
 
-// =============================================================================
-// RELATÓRIOS
-// =============================================================================
 class TelaRelatorios extends StatefulWidget {
   final List<Map<String, dynamic>> bairros;
   final List<Map<String, dynamic>> semanas;
@@ -2438,7 +2678,6 @@ class _TelaRelatoriosState extends State<TelaRelatorios> {
   bool _carregando = false;
   Map<String, dynamic>? _dadosRelatorio;
   String _tipoRelatorio = 'Rotina Geral (Inclui PE)';
-
   Future<void> _gerarResumo() async {
     if (_bairroSelecionado == null || _semanaSelecionada == null) return;
     setState(() => _carregando = true);
@@ -2513,7 +2752,6 @@ class _TelaRelatoriosState extends State<TelaRelatorios> {
           sE = 0,
           sTubitos = 0,
           sElim = 0;
-
       for (var v in visitas) {
         if (v['semana_epidemiologica'] == _semanaSelecionada!['semana']) {
           var imovelRelacionado = mapaImoveis[v['imovel']];
@@ -2521,7 +2759,6 @@ class _TelaRelatoriosState extends State<TelaRelatorios> {
               imovelRelacionado['bairro'] == _bairroSelecionado!['nome']) {
             String tipo = imovelRelacionado['tipo'] ?? 'R';
             if (_tipoRelatorio == 'Apenas PE' && tipo != 'PE') continue;
-
             if (tipo == 'R')
               tRes++;
             else if (tipo == 'C')

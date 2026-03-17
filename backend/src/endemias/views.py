@@ -1,7 +1,7 @@
 import json
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from .models import Visita, Agente, Imovel
+from .models import Visita, Agente, Imovel, VacinacaoAntirrabica
 from django.contrib.auth.models import User
 from django.contrib import messages
 from rest_framework.decorators import api_view, permission_classes
@@ -11,7 +11,7 @@ from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from django.db import models
 from django.contrib.gis.geos import Point 
-from django.utils import timezone # <--- IMPORTANTE: Puxa o fuso horário de Brasília
+from django.utils import timezone
 
 def converte_seguro(modelo, campo, valor):
     try:
@@ -63,7 +63,6 @@ def dashboard_supervisor(request):
     visitas_pe = Visita.objects.filter(imovel__tipo='PE').select_related('imovel', 'agente').order_by('-data_visita')[:500]
     todas_visitas = Visita.objects.select_related('imovel', 'agente').order_by('imovel__bairro', 'imovel__quarteirao', '-data_visita')
     
-    # PACOTE DE DADOS COM O HORÁRIO CORRIGIDO
     visitas_json_list = []
     for v in todas_visitas:
         lat, lng = None, None
@@ -78,83 +77,24 @@ def dashboard_supervisor(request):
                 lng = float(lng_val)
         except: pass
 
-        # Correção do Fuso Horário
         dt_str = 'S/D'
         if v.data_visita:
-            try:
-                dt_local = timezone.localtime(v.data_visita)
-                dt_str = dt_local.strftime('%d/%m/%Y às %H:%M')
-            except:
-                dt_str = v.data_visita.strftime('%d/%m/%Y às %H:%M')
+            try: dt_str = timezone.localtime(v.data_visita).strftime('%d/%m/%Y às %H:%M')
+            except: dt_str = v.data_visita.strftime('%d/%m/%Y às %H:%M')
 
         visitas_json_list.append({
-            'id': v.id,
-            'semana': str(getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1))),
-            'data_visita': dt_str,
-            'bairro': getattr(v.imovel, 'bairro', 'Sem Bairro') if v.imovel else 'Sem Bairro',
-            'quarteirao': str(getattr(v.imovel, 'quarteirao', 'S/Q')) if v.imovel else 'S/Q',
-            'endereco': getattr(v.imovel, 'endereco', 'Rua Não Informada') if v.imovel else 'Rua Não Informada',
-            'numero': str(getattr(v.imovel, 'numero', 'S/N')) if v.imovel else 'S/N',
-            'imovel': v.imovel.id if v.imovel else 'S/I',
-            'tipo': getattr(v.imovel, 'tipo', 'R') if v.imovel else 'R',
-            'status': getattr(v, 'status', 'N'),
-            'dep_A1': getattr(v, 'dep_A1', 0) or 0,
-            'dep_A2': getattr(v, 'dep_A2', 0) or 0,
-            'dep_B': getattr(v, 'dep_B', 0) or 0,
-            'dep_C': getattr(v, 'dep_C', 0) or 0,
-            'dep_D1': getattr(v, 'dep_D1', 0) or 0,
-            'dep_D2': getattr(v, 'dep_D2', 0) or 0,
-            'dep_E': getattr(v, 'dep_E', 0) or 0,
-            'tubitos': getattr(v, 'amostras_coletadas', 0) or 0,
-            'eliminados': getattr(v, 'depositos_eliminados', 0) or 0,
-            'agente': getattr(v.agente, 'nome', 'Sem Agente') if v.agente else 'Sem Agente',
-            'lat': lat,
-            'lng': lng
+            'id': v.id, 'semana': str(getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1))),
+            'data_visita': dt_str, 'bairro': getattr(v.imovel, 'bairro', 'Sem Bairro') if v.imovel else 'Sem Bairro',
+            'quarteirao': str(getattr(v.imovel, 'quarteirao', 'S/Q')) if v.imovel else 'S/Q', 'endereco': getattr(v.imovel, 'endereco', 'Rua Não Informada') if v.imovel else 'Rua Não Informada',
+            'numero': str(getattr(v.imovel, 'numero', 'S/N')) if v.imovel else 'S/N', 'imovel': v.imovel.id if v.imovel else 'S/I',
+            'tipo': getattr(v.imovel, 'tipo', 'R') if v.imovel else 'R', 'status': getattr(v, 'status', 'N'),
+            'dep_A1': getattr(v, 'dep_A1', 0) or 0, 'dep_A2': getattr(v, 'dep_A2', 0) or 0, 'dep_B': getattr(v, 'dep_B', 0) or 0,
+            'dep_C': getattr(v, 'dep_C', 0) or 0, 'dep_D1': getattr(v, 'dep_D1', 0) or 0, 'dep_D2': getattr(v, 'dep_D2', 0) or 0, 'dep_E': getattr(v, 'dep_E', 0) or 0,
+            'tubitos': getattr(v, 'amostras_coletadas', 0) or 0, 'eliminados': getattr(v, 'depositos_eliminados', 0) or 0,
+            'agente': getattr(v.agente, 'nome', 'Sem Agente') if v.agente else 'Sem Agente', 'lat': lat, 'lng': lng
         })
     visitas_json = json.dumps(visitas_json_list)
     
-    relatorios_dict = {}
-    for v in todas_visitas:
-        sem = str(getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1)))
-        bairro = getattr(v.imovel, 'bairro', 'Sem Bairro') if v.imovel else 'Sem Bairro'
-        agente_nome = getattr(v.agente, 'nome', 'Sem Agente') if v.agente else 'Sem Agente'
-        chave = f"{sem}_{bairro}"
-        if chave not in relatorios_dict:
-            relatorios_dict[chave] = {
-                'semana': sem, 'bairro': bairro, 'R': 0, 'C': 0, 'TB': 0, 'PE': 0, 'Outros': 0, 'total_imoveis': 0, 'N': 0, 'F': 0, 'Rec': 0,
-                'A1': 0, 'A2': 0, 'B': 0, 'C': 0, 'D1': 0, 'D2': 0, 'E': 0, 'total_depositos': 0, 'tubitos': 0, 'eliminados': 0, 'agentes': {}
-            }
-        r = relatorios_dict[chave]
-        tipo = getattr(v.imovel, 'tipo', 'R') if v.imovel else 'R'
-        if tipo == 'R': r['R'] += 1
-        elif tipo == 'C': r['C'] += 1
-        elif tipo == 'TB': r['TB'] += 1
-        elif tipo == 'PE': r['PE'] += 1
-        else: r['Outros'] += 1
-        r['total_imoveis'] += 1
-        st = getattr(v, 'status', 'N')
-        if st == 'N': r['N'] += 1
-        elif st == 'F': r['F'] += 1
-        elif st == 'R': r['Rec'] += 1
-        a1 = getattr(v, 'dep_A1', 0) or 0; r['A1'] += a1
-        a2 = getattr(v, 'dep_A2', 0) or 0; r['A2'] += a2
-        b = getattr(v, 'dep_B', 0) or 0; r['B'] += b
-        c = getattr(v, 'dep_C', 0) or 0; r['C'] += c
-        d1 = getattr(v, 'dep_D1', 0) or 0; r['D1'] += d1
-        d2 = getattr(v, 'dep_D2', 0) or 0; r['D2'] += d2
-        e = getattr(v, 'dep_E', 0) or 0; r['E'] += e
-        r['total_depositos'] += (a1 + a2 + b + c + d1 + d2 + e)
-        r['tubitos'] += getattr(v, 'amostras_coletadas', 0) or 0
-        r['eliminados'] += getattr(v, 'depositos_eliminados', 0) or 0
-        if agente_nome not in r['agentes']: r['agentes'][agente_nome] = 0
-        r['agentes'][agente_nome] += 1
-    for r in relatorios_dict.values():
-        r['lista_agentes'] = [{'nome': k, 'qtd': v} for k, v in r['agentes'].items()]
-    def pega_semana(s):
-        try: return int(s)
-        except: return 0
-    lista_relatorios = sorted(relatorios_dict.values(), key=lambda x: (pega_semana(x['semana']), x['bairro']), reverse=True)
-
     marcadores = []
     for visita in visitas_com_foco:
         try:
@@ -164,19 +104,18 @@ def dashboard_supervisor(request):
                 lng = getattr(visita.imovel.localizacao, 'x', lng)
                 lat = getattr(visita.imovel.localizacao, 'y', lat)
             if lat is not None and lng is not None:
-                # Corrigindo também o mapa secundário
                 dt_str = 'S/D'
                 if visita.data_visita:
                     try: dt_str = timezone.localtime(visita.data_visita).strftime('%d/%m/%Y às %H:%M')
                     except: dt_str = visita.data_visita.strftime('%d/%m/%Y às %H:%M')
                 marcadores.append({'lat': float(lat), 'lng': float(lng), 'descricao': f"Tubitos: {visita.amostras_coletadas} <br>Data: {dt_str}"})
         except Exception: continue
-
     marcadores_json = json.dumps(marcadores)
+
     contexto = {
         'total_visitas': total_visitas, 'focos_dengue': focos_dengue, 'agentes_ativos': agentes_ativos,
         'agentes_lista': agentes_lista, 'marcadores_json': marcadores_json, 'visitas_rotina': visitas_rotina, 
-        'visitas_pe': visitas_pe, 'todas_visitas': todas_visitas, 'visitas_json': visitas_json, 'lista_relatorios': lista_relatorios
+        'visitas_pe': visitas_pe, 'todas_visitas': todas_visitas, 'visitas_json': visitas_json, 
     }
     return render(request, 'dashboard.html', contexto)
 
@@ -260,8 +199,6 @@ def api_visitas(request, pk=None):
             if agente_username:
                 agente = Agente.objects.filter(user__username=agente_username).first()
             if not agente:
-                agente = Agente.objects.filter(id=request.data.get('agente')).first()
-            if not agente:
                 agente = Agente.objects.first()
             nova.agente = agente
 
@@ -290,3 +227,49 @@ def api_visitas(request, pk=None):
             visita.save()
             return Response({"id": visita.id}, status=200)
         except Exception as e: return Response({"erro": str(e)}, status=400)
+
+# =========================================================
+# NOVA ROTA: RECEBENDO DADOS DE VACINAÇÃO DA ZOONOSE
+# =========================================================
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def api_vacinacao(request):
+    try:
+        agente_username = request.data.get('agente_username')
+        agente = Agente.objects.filter(user__username=agente_username).first()
+        if not agente:
+            agente = Agente.objects.first() 
+
+        localidade = request.data.get('localidade', '')
+        caes = int(request.data.get('caes_vacinados', 0))
+        gatos = int(request.data.get('gatos_vacinados', 0))
+
+        loc_str = request.data.get('localizacao', '')
+        ponto = None
+        if loc_str.startswith('POINT'):
+            try:
+                coords = loc_str.replace('POINT(', '').replace(')', '').split()
+                ponto = Point(float(coords[0]), float(coords[1]))
+            except: pass
+
+        nova_vacina = VacinacaoAntirrabica.objects.create(
+            agente=agente,
+            localidade=localidade,
+            caes_vacinados=caes,
+            gatos_vacinados=gatos,
+            localizacao=ponto
+        )
+
+        if request.data.get('data_vacinacao'):
+            from django.utils.dateparse import parse_datetime
+            dt = parse_datetime(request.data['data_vacinacao'])
+            if dt:
+                nova_vacina.data_vacinacao = dt
+                nova_vacina.save()
+        else:
+            nova_vacina.data_vacinacao = timezone.now()
+            nova_vacina.save()
+
+        return Response({"id": nova_vacina.id}, status=201)
+    except Exception as e:
+        return Response({"erro": str(e)}, status=400)
