@@ -14,11 +14,12 @@ from django.contrib.gis.geos import Point
 from django.utils import timezone
 
 # =====================================================================
-# TRUQUE JEDI: FORÇAR CRIAÇÃO DA TABELA DE VACINAÇÃO IGNORANDO ERROS
+# TRUQUE JEDI APRIMORADO: FORÇAR CRIAÇÃO DE COLUNAS E TABELAS
 # =====================================================================
 def consertar_banco_de_dados():
     try:
         with connection.cursor() as cursor:
+            # 1. Cria a Tabela de Vacinação (se não existir)
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS endemias_vacinacaoantirrabica (
                     id serial PRIMARY KEY,
@@ -30,6 +31,9 @@ def consertar_banco_de_dados():
                     localizacao geometry(POINT,4326)
                 );
             ''')
+            # 2. Adiciona as colunas de Latitude e Longitude (que causaram o Erro 500)
+            cursor.execute('ALTER TABLE endemias_imovel ADD COLUMN IF NOT EXISTS latitude double precision;')
+            cursor.execute('ALTER TABLE endemias_imovel ADD COLUMN IF NOT EXISTS longitude double precision;')
     except Exception as e:
         pass
 
@@ -174,7 +178,6 @@ def dashboard_supervisor(request):
         'total_visitas': total_visitas, 'focos_dengue': focos_dengue, 'agentes_ativos': agentes_ativos,
         'agentes_lista': agentes_lista, 'marcadores_json': marcadores_json, 'visitas_rotina': visitas_rotina, 
         'visitas_pe': visitas_pe, 'todas_visitas': todas_visitas, 'visitas_json': visitas_json, 
-        # ENVIANDO DADOS DA ZOONOSE PARA O HTML
         'todas_vacinacoes': todas_vacinacoes, 'total_caes': total_caes, 'total_gatos': total_gatos, 'vacinacoes_json': vacinacoes_json
     }
     return render(request, 'dashboard.html', contexto)
