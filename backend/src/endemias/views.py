@@ -11,6 +11,7 @@ from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
 from django.db import models
 from django.contrib.gis.geos import Point 
+from django.utils import timezone # <--- IMPORTANTE: Puxa o fuso horário de Brasília
 
 def converte_seguro(modelo, campo, valor):
     try:
@@ -62,7 +63,7 @@ def dashboard_supervisor(request):
     visitas_pe = Visita.objects.filter(imovel__tipo='PE').select_related('imovel', 'agente').order_by('-data_visita')[:500]
     todas_visitas = Visita.objects.select_related('imovel', 'agente').order_by('imovel__bairro', 'imovel__quarteirao', '-data_visita')
     
-    # PACOTE DE DADOS GERAL (AGORA COM COORDENADAS)
+    # PACOTE DE DADOS COM O HORÁRIO CORRIGIDO
     visitas_json_list = []
     for v in todas_visitas:
         lat, lng = None, None
@@ -77,10 +78,19 @@ def dashboard_supervisor(request):
                 lng = float(lng_val)
         except: pass
 
+        # Correção do Fuso Horário
+        dt_str = 'S/D'
+        if v.data_visita:
+            try:
+                dt_local = timezone.localtime(v.data_visita)
+                dt_str = dt_local.strftime('%d/%m/%Y às %H:%M')
+            except:
+                dt_str = v.data_visita.strftime('%d/%m/%Y às %H:%M')
+
         visitas_json_list.append({
             'id': v.id,
             'semana': str(getattr(v, 'semana_epidemiologica', getattr(v, 'semana', 1))),
-            'data_visita': v.data_visita.strftime('%d/%m/%Y às %H:%M') if v.data_visita else 'S/D',
+            'data_visita': dt_str,
             'bairro': getattr(v.imovel, 'bairro', 'Sem Bairro') if v.imovel else 'Sem Bairro',
             'quarteirao': str(getattr(v.imovel, 'quarteirao', 'S/Q')) if v.imovel else 'S/Q',
             'endereco': getattr(v.imovel, 'endereco', 'Rua Não Informada') if v.imovel else 'Rua Não Informada',
@@ -145,10 +155,28 @@ def dashboard_supervisor(request):
         except: return 0
     lista_relatorios = sorted(relatorios_dict.values(), key=lambda x: (pega_semana(x['semana']), x['bairro']), reverse=True)
 
+    marcadores = []
+    for visita in visitas_com_foco:
+        try:
+            lat = getattr(visita.imovel, 'latitude', None)
+            lng = getattr(visita.imovel, 'longitude', None)
+            if hasattr(visita.imovel, 'localizacao') and visita.imovel.localizacao:
+                lng = getattr(visita.imovel.localizacao, 'x', lng)
+                lat = getattr(visita.imovel.localizacao, 'y', lat)
+            if lat is not None and lng is not None:
+                # Corrigindo também o mapa secundário
+                dt_str = 'S/D'
+                if visita.data_visita:
+                    try: dt_str = timezone.localtime(visita.data_visita).strftime('%d/%m/%Y às %H:%M')
+                    except: dt_str = visita.data_visita.strftime('%d/%m/%Y às %H:%M')
+                marcadores.append({'lat': float(lat), 'lng': float(lng), 'descricao': f"Tubitos: {visita.amostras_coletadas} <br>Data: {dt_str}"})
+        except Exception: continue
+
+    marcadores_json = json.dumps(marcadores)
     contexto = {
         'total_visitas': total_visitas, 'focos_dengue': focos_dengue, 'agentes_ativos': agentes_ativos,
-        'agentes_lista': agentes_lista, 'visitas_rotina': visitas_rotina, 'visitas_pe': visitas_pe,
-        'todas_visitas': todas_visitas, 'visitas_json': visitas_json, 'lista_relatorios': lista_relatorios
+        'agentes_lista': agentes_lista, 'marcadores_json': marcadores_json, 'visitas_rotina': visitas_rotina, 
+        'visitas_pe': visitas_pe, 'todas_visitas': todas_visitas, 'visitas_json': visitas_json, 'lista_relatorios': lista_relatorios
     }
     return render(request, 'dashboard.html', contexto)
 
