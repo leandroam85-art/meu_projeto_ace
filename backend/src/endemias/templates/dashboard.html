@@ -23,7 +23,7 @@
         .icon-box { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
         #map { height: 450px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 2px solid #fff; }
         
-        /* Ajustes do Relatório idênticos ao App */
+        /* Estilos do Relatório Oficial */
         .caixa-filtro { background-color: #f1f3f5; border-radius: 12px; padding: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .btn-calcular { background-color: #78909c; color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
         .btn-calcular:hover { background-color: #607d8b; color: white; }
@@ -35,11 +35,17 @@
         .linha-rel .valor { font-weight: bold; color: #1565c0; }
         .linha-rel.total { font-weight: bold; color: #333; border-top: 2px solid #cfd8dc; margin-top: 5px; }
 
+        /* Estilos EXATOS do App Mobile para o Histórico */
+        .input-mobile { position: relative; border: 2px solid #1E3A8A; border-radius: 12px; padding: 10px 15px; background: white; display: flex; align-items: center; }
+        .input-mobile-label { position: absolute; top: -10px; left: 15px; background: white; padding: 0 5px; font-size: 12px; color: #6b7280; }
+        
         @media print {
-            .sidebar, .btn, .caixa-filtro, .alert { display: none !important; }
+            .sidebar, .btn, .caixa-filtro, .alert, .input-mobile { display: none !important; }
             .main-content { margin-left: 0; padding: 0; }
             body { background-color: white; }
             .card-relatorio { border: 1px solid #ddd; page-break-inside: avoid; }
+            .accordion-button::after { display: none !important; }
+            .accordion-collapse { display: block !important; }
         }
     </style>
 </head>
@@ -172,52 +178,18 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-secondary"><i class="fa-solid fa-clock-rotate-left me-2 text-success"></i> Histórico Agrupado</h2>
                 </div>
-                <div class="card stat-card bg-white p-4 border-start border-success border-4">
-                    <p class="text-muted mb-4"><i class="fa-solid fa-circle-info me-1"></i> Clique no nome do bairro para expandir os quarteirões e ver os imóveis visitados.</p>
-                    {% regroup todas_visitas by imovel.bairro as bairro_list %}
-                    <div class="accordion shadow-sm" id="accordionBairros">
-                        {% for bairro in bairro_list %}
-                        <div class="accordion-item border-0 border-bottom">
-                            <h2 class="accordion-header" id="heading-{{ forloop.counter }}">
-                                <button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#collapse-{{ forloop.counter }}" style="background-color: #f8f9fa; color: #1E3A8A;">
-                                    <i class="fa-solid fa-map-location-dot me-2 text-success"></i> Bairro: {{ bairro.grouper|default:"Sem Bairro" }}
-                                    <span class="badge bg-success ms-3 rounded-pill">{{ bairro.list|length }} visitas</span>
-                                </button>
-                            </h2>
-                            <div id="collapse-{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#accordionBairros">
-                                <div class="accordion-body p-3 bg-light">
-                                    {% regroup bairro.list by imovel.quarteirao as quarteirao_list %}
-                                    {% for quart in quarteirao_list %}
-                                    <div class="card mb-3 border-0 shadow-sm">
-                                        <div class="card-header bg-white fw-bold text-secondary d-flex justify-content-between align-items-center">
-                                            <span><i class="fa-solid fa-border-all me-2 text-warning"></i> Quarteirão: {{ quart.grouper|default:"S/Q" }}</span><span class="badge bg-secondary">{{ quart.list|length }} visitas</span>
-                                        </div>
-                                        <div class="table-responsive">
-                                            <table class="table table-sm table-hover align-middle mb-0">
-                                                <thead class="table-light"><tr><th>Data</th><th>Endereço</th><th>Status</th><th class="text-center">Amostras</th><th>Agente</th></tr></thead>
-                                                <tbody>
-                                                    {% for v in quart.list %}
-                                                    <tr>
-                                                        <td class="text-muted fw-bold">{{ v.data_visita|date:"d/m/Y" }}</td>
-                                                        <td>Nº {{ v.imovel.numero|default:"S/N" }} - {{ v.imovel.endereco }}<br><small class="text-muted">Tipo: {{ v.imovel.tipo }}</small></td>
-                                                        <td>{% if v.status == 'N' %}<span class="badge bg-success">Normal</span>{% elif v.status == 'F' %}<span class="badge bg-warning text-dark">Fechada</span>{% elif v.status == 'R' %}<span class="badge bg-danger">Recusada</span>{% else %}<span class="badge bg-secondary">{{ v.status }}</span>{% endif %}</td>
-                                                        <td class="text-center">{% if v.amostras_coletadas > 0 %}<span class="badge bg-danger rounded-pill"><i class="fa-solid fa-vial-virus"></i> {{ v.amostras_coletadas }}</span>{% else %}<span class="text-muted">0</span>{% endif %}</td>
-                                                        <td><small><i class="fa-solid fa-user text-muted me-1"></i> {{ v.agente.nome|default:"-" }}</small></td>
-                                                    </tr>
-                                                    {% endfor %}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
-                                    {% endfor %}
-                                </div>
-                            </div>
-                        </div>
-                        {% empty %}
-                        <div class="text-center py-5 text-muted"><i class="fa-solid fa-folder-open fa-4x mb-3 text-light"></i><h5>Nenhum histórico encontrado.</h5></div>
-                        {% endfor %}
+                
+                <div class="card stat-card bg-white p-4 border-top border-success border-4 mb-4">
+                    <div class="input-mobile mb-2" style="max-width: 400px;">
+                        <span class="input-mobile-label fw-bold">Filtrar por Semana Epidemiológica</span>
+                        <i class="fa-regular fa-calendar-days text-success fs-4 me-3"></i>
+                        <select id="hist-semana" class="form-select border-0 shadow-none fw-bold text-dark fs-5 p-0 bg-transparent" onchange="renderHistoricoJS()">
+                            <option value="">Todas as Semanas do Ano</option>
+                            </select>
                     </div>
                 </div>
+
+                <div id="resultado-historico"></div>
             </div>
 
             <div class="tab-pane fade" id="conteudo-relatorios" role="tabpanel">
@@ -243,7 +215,7 @@
 
                     <select id="rel-semana" class="form-select mb-3 border-0 py-3 text-muted fw-bold">
                         <option value="">Selecione a Semana Epidemiológica</option>
-                        </select>
+                    </select>
 
                     <label class="text-muted small ms-2">Tipo de Relatório</label>
                     <select id="rel-tipo" class="form-select mb-4 border-0 py-3 text-dark fw-bold">
@@ -264,7 +236,7 @@
 
                     <div class="row">
                         <div class="col-md-6 col-lg-4">
-                            <div class="card-relatorio">
+                            <div class="card-relatorio border">
                                 <h5>Nº Imóveis Trabalhados por Tipo</h5>
                                 <div class="linha-rel"><span>Residência</span><span class="valor" id="r-R">0</span></div>
                                 <div class="linha-rel"><span>Comércio</span><span class="valor" id="r-C">0</span></div>
@@ -274,21 +246,21 @@
                                 <div class="linha-rel total"><span>TOTAL GERAL</span><span class="valor" id="r-TotalImoveis">0</span></div>
                             </div>
                             
-                            <div class="card-relatorio">
+                            <div class="card-relatorio border">
                                 <h5>Produtividade por Agente</h5>
                                 <div id="lista-agentes"></div>
                             </div>
                         </div>
 
                         <div class="col-md-6 col-lg-4">
-                            <div class="card-relatorio">
+                            <div class="card-relatorio border">
                                 <h5>Situação / Pendências</h5>
                                 <div class="linha-rel"><span>Inspecionados (Trat. Focal)</span><span class="valor text-success" id="r-N">0</span></div>
                                 <div class="linha-rel"><span>Fechados</span><span class="valor text-dark" id="r-F">0</span></div>
                                 <div class="linha-rel"><span>Recusados</span><span class="valor text-danger" id="r-Rec">0</span></div>
                             </div>
 
-                            <div class="card-relatorio">
+                            <div class="card-relatorio border">
                                 <h5>Ações (Focos)</h5>
                                 <div class="linha-rel"><span class="text-danger fw-bold"><i class="fa-solid fa-vial-virus"></i> Tubitos Coletados</span><span class="valor text-danger" id="r-Tubitos">0</span></div>
                                 <div class="linha-rel"><span class="text-success fw-bold"><i class="fa-solid fa-trash-can"></i> Dep. Eliminados</span><span class="valor text-success" id="r-Eliminados">0</span></div>
@@ -296,7 +268,7 @@
                         </div>
 
                         <div class="col-md-12 col-lg-4">
-                            <div class="card-relatorio">
+                            <div class="card-relatorio border">
                                 <h5>Depósitos Inspecionados</h5>
                                 <div class="linha-rel"><span>A1 (Caixa d'água)</span><span class="valor" id="r-A1">0</span></div>
                                 <div class="linha-rel"><span>A2 (Armazenamentos)</span><span class="valor" id="r-A2">0</span></div>
@@ -367,19 +339,201 @@
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     
     <script>
-        // 1. Preenche o dropdown de semanas (1 a 52)
-        const selectSemana = document.getElementById('rel-semana');
-        for(let i=1; i<=52; i++) {
-            let option = document.createElement('option');
-            option.value = i;
-            option.text = `Semana ${i}`;
-            selectSemana.appendChild(option);
+        // ----------------------------------------------------
+        // MOTOR DE DADOS JAVASCRIPT
+        // ----------------------------------------------------
+        
+        // Recebe o pacote cru de visitas do servidor
+        const visitasDB = JSON.parse('{{ visitas_json|escapejs }}');
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            var map = L.map('map').setView([-10.0116, -51.1186], 13);
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
+            var marcadores = JSON.parse('{{ marcadores_json|escapejs }}');
+            var iconeVermelho = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
+            marcadores.forEach(function(m) { if(m.lat && m.lng) { L.marker([m.lat, m.lng], {icon: iconeVermelho}).addTo(map).bindPopup('<b>Foco Encontrado!</b><br>' + m.descricao); } });
+            
+            var triggerTabList = [].slice.call(document.querySelectorAll('#menu-tabs button'))
+            triggerTabList.forEach(function (triggerEl) {
+                var tabTrigger = new bootstrap.Tab(triggerEl)
+                triggerEl.addEventListener('shown.bs.tab', function (event) { if(event.target.id === 'tab-dashboard'){ setTimeout(function(){ map.invalidateSize(); }, 100); } })
+            });
+
+            // Preenche as semanas dos dropdowns
+            const selectRelSemana = document.getElementById('rel-semana');
+            const selectHistSemana = document.getElementById('hist-semana');
+            
+            let semanasUnicas = [...new Set(visitasDB.map(v => parseInt(v.semana)))].filter(n => !isNaN(n)).sort((a,b) => b - a);
+            
+            semanasUnicas.forEach(i => {
+                let opt1 = document.createElement('option'); opt1.value = i; opt1.text = `Semana ${i}`; selectRelSemana.appendChild(opt1);
+                let opt2 = document.createElement('option'); opt2.value = i; opt2.text = `Semana ${i}`; selectHistSemana.appendChild(opt2);
+            });
+
+            // Já renderiza o histórico
+            renderHistoricoJS();
+        });
+
+        // ========================================================
+        // MÁGICA DO HISTÓRICO AGRUPADO (4 NÍVEIS IDÊNTICO AO APP)
+        // ========================================================
+        function renderHistoricoJS() {
+            const semanaSelecionada = document.getElementById('hist-semana').value;
+            const container = document.getElementById('resultado-historico');
+
+            let filtradas = visitasDB;
+            if (semanaSelecionada !== "") {
+                filtradas = visitasDB.filter(v => v.semana === semanaSelecionada);
+            }
+
+            if (filtradas.length === 0) {
+                container.innerHTML = '<div class="text-center py-5 text-muted"><i class="fa-solid fa-folder-open fa-4x mb-3 text-light"></i><h5>Nenhum histórico encontrado para este filtro.</h5></div>';
+                return;
+            }
+
+            // Agrupamento: Bairro -> Quarteirão -> Rua -> Imóvel
+            let agrupado = {};
+            filtradas.forEach(v => {
+                let b = (v.bairro || "Sem Bairro").toUpperCase();
+                let q_raw = v.quarteirao || "S/Q";
+                let numQ = parseInt(q_raw);
+                let q = !isNaN(numQ) ? numQ.toString().padStart(2, '0') : q_raw;
+                let rua = (v.endereco || "Rua Não Informada").toUpperCase();
+                let num = v.numero || "S/N";
+                let imId = v.imovel || Math.random().toString();
+                let tipo = v.tipo || 'R';
+
+                if (!agrupado[b]) agrupado[b] = { total: 0, quarteiroes: {} };
+                agrupado[b].total++;
+
+                if (!agrupado[b].quarteiroes[q]) agrupado[b].quarteiroes[q] = {};
+                if (!agrupado[b].quarteiroes[q][rua]) agrupado[b].quarteiroes[q][rua] = {};
+                if (!agrupado[b].quarteiroes[q][rua][imId]) {
+                    agrupado[b].quarteiroes[q][rua][imId] = { numero: num, tipo: tipo, visitas: [] };
+                }
+                agrupado[b].quarteiroes[q][rua][imId].visitas.push(v);
+            });
+
+            let html = '';
+            let bId = 0;
+
+            Object.keys(agrupado).sort().forEach(bairro => {
+                let dadosBairro = agrupado[bairro];
+                
+                // 1. CABEÇALHO DO BAIRRO (Verde igual à imagem)
+                html += `
+                <div class="d-flex justify-content-between align-items-center mt-4 mb-3 px-3 py-2 rounded" style="background-color: #e8f5e9;">
+                    <h6 class="fw-bold mb-0" style="color: #2e7d32; letter-spacing: 1px;">${bairro}</h6>
+                    <span class="badge rounded-pill px-3 py-2" style="background-color: #388e3c;">${dadosBairro.total} VISITAS</span>
+                </div>
+                `;
+
+                let accordionId = `acc-bairro-${bId++}`;
+                html += `<div class="accordion" id="${accordionId}">`;
+
+                let qId = 0;
+                Object.keys(dadosBairro.quarteiroes).sort((a,b) => {
+                    let nA = parseInt(a); let nB = parseInt(b);
+                    if(!isNaN(nA) && !isNaN(nB)) return nA - nB;
+                    return a.localeCompare(b);
+                }).forEach(quart => {
+                    let ruas = dadosBairro.quarteiroes[quart];
+                    let itemAccId = `col-${bId}-${qId++}`;
+
+                    // 2. CARD DO QUARTEIRÃO (Com a hashtag verde)
+                    html += `
+                    <div class="accordion-item border mb-3 shadow-sm rounded-4 overflow-hidden">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button collapsed fw-bold py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#${itemAccId}" style="background-color: white; color: #1f2937;">
+                                <i class="fa-solid fa-hashtag fs-4 me-3" style="color: #4caf50;"></i>
+                                <span style="font-size: 17px;">Quarteirão ${quart}</span>
+                            </button>
+                        </h2>
+                        <div id="${itemAccId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}">
+                            <div class="accordion-body p-0 bg-light">
+                    `;
+
+                    Object.keys(ruas).sort().forEach(rua => {
+                        let imoveis = ruas[rua];
+                        
+                        // 3. FAIXA DA RUA (Cinza com pin vermelho)
+                        html += `
+                                <div class="px-4 py-2 border-bottom border-top" style="background-color: #f1f5f9;">
+                                    <i class="fa-solid fa-map-pin me-2" style="color: #e53935;"></i> 
+                                    <span class="fw-bold text-dark">${rua}</span>
+                                </div>
+                        `;
+
+                        Object.keys(imoveis).forEach(imId => {
+                            let imovel = imoveis[imId];
+                            let iconHome = imovel.tipo === 'PE' ? 'fa-industry' : 'fa-house';
+                            
+                            // 4. CARD DO IMÓVEL (Casinha azul e detalhes)
+                            html += `
+                                <div class="card m-3 shadow-sm border rounded-4 overflow-hidden">
+                                    <div class="card-body p-3">
+                                        <div class="d-flex justify-content-between align-items-center mb-2">
+                                            <div class="d-flex align-items-center">
+                                                <div class="p-2 rounded bg-light me-3">
+                                                    <i class="fa-solid ${iconHome} fs-4" style="color: #1e88e5;"></i>
+                                                </div>
+                                                <div>
+                                                    <h6 class="fw-bold mb-1 text-dark" style="font-size: 16px;">Nº ${imovel.numero} | Tipo: ${imovel.tipo}</h6>
+                                                    <span class="text-muted small">Visitas: ${imovel.visitas.length}</span>
+                                                </div>
+                                            </div>
+                                            <i class="fa-solid fa-pencil fs-5" style="color: #fb8c00;"></i>
+                                        </div>
+                            `;
+
+                            // 5. DETALHES DA VISITA DENTRO DO IMÓVEL
+                            imovel.visitas.forEach(v => {
+                                let txtStatus = v.status === 'N' ? 'N' : (v.status === 'F' ? 'F' : 'R');
+                                let corIcon = v.status === 'N' ? '#4caf50' : '#e53935';
+                                let iconStatus = v.status === 'N' ? 'fa-circle-check' : 'fa-circle-xmark';
+                                let dataFmt = v.data_visita && v.data_visita !== "S/D" ? v.data_visita : "Sem Data";
+
+                                html += `
+                                        <div class="mt-3 pt-3 border-top">
+                                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                                <span class="fw-bold text-dark">Visita ID: ${v.id || 'Nova'} - Status: ${txtStatus}</span>
+                                                <i class="fa-solid ${iconStatus} fs-5" style="color: ${corIcon};"></i>
+                                            </div>
+                                            <div class="d-flex align-items-center text-muted small mb-1">
+                                                <i class="fa-regular fa-calendar-days me-2 text-danger"></i> ${dataFmt}
+                                            </div>
+                                            <div class="text-muted small">
+                                                Tubitos: ${v.tubitos}
+                                            </div>
+                                            <div class="text-muted small mt-1">
+                                                <i class="fa-solid fa-user-check me-1 text-success"></i> Agente: ${v.agente}
+                                            </div>
+                                        </div>
+                                `;
+                            });
+
+                            html += `
+                                    </div>
+                                </div>
+                            `;
+                        });
+                    });
+
+                    html += `
+                            </div>
+                        </div>
+                    </div>
+                    `;
+                });
+                html += `</div>`; 
+            });
+
+            container.innerHTML = html;
         }
 
-        // 2. Recebe o pacote de visitas cru do servidor Python
-        const visitasDB = JSON.parse('{{ visitas_json|escapejs }}');
-
-        // 3. A Função que calcula tudo no clique do botão
+        // ==========================================
+        // GERADOR DE RELATÓRIO PNCD
+        // ==========================================
         function gerarFechamentoJS() {
             const bairro = document.getElementById('rel-bairro').value;
             const semana = document.getElementById('rel-semana').value;
@@ -390,75 +544,33 @@
                 return;
             }
 
-            // Zera todos os contadores
-            let contadores = {
-                R: 0, C: 0, TB: 0, PE: 0, Outros: 0,
-                N: 0, F: 0, Rec: 0,
-                A1: 0, A2: 0, B: 0, C_dep: 0, D1: 0, D2: 0, E: 0,
-                tubitos: 0, eliminados: 0
-            };
+            let contadores = { R: 0, C: 0, TB: 0, PE: 0, Outros: 0, N: 0, F: 0, Rec: 0, A1: 0, A2: 0, B: 0, C_dep: 0, D1: 0, D2: 0, E: 0, tubitos: 0, eliminados: 0 };
             let agentes = {};
 
-            // Filtra e soma a matemática
             visitasDB.forEach(v => {
                 if (v.bairro === bairro && v.semana === semana) {
                     if (tipoRelatorio === 'Apenas PE' && v.tipo !== 'PE') return;
 
-                    // Soma Tipo de Imóvel
-                    if (v.tipo === 'R') contadores.R++;
-                    else if (v.tipo === 'C') contadores.C++;
-                    else if (v.tipo === 'TB') contadores.TB++;
-                    else if (v.tipo === 'PE') contadores.PE++;
-                    else contadores.Outros++;
+                    if (v.tipo === 'R') contadores.R++; else if (v.tipo === 'C') contadores.C++; else if (v.tipo === 'TB') contadores.TB++; else if (v.tipo === 'PE') contadores.PE++; else contadores.Outros++;
+                    if (v.status === 'N') contadores.N++; else if (v.status === 'F') contadores.F++; else if (v.status === 'R') contadores.Rec++;
 
-                    // Soma Status
-                    if (v.status === 'N') contadores.N++;
-                    else if (v.status === 'F') contadores.F++;
-                    else if (v.status === 'R') contadores.Rec++;
+                    contadores.A1 += v.dep_A1; contadores.A2 += v.dep_A2; contadores.B += v.dep_B; contadores.C_dep += v.dep_C; contadores.D1 += v.dep_D1; contadores.D2 += v.dep_D2; contadores.E += v.dep_E;
+                    contadores.tubitos += v.tubitos; contadores.eliminados += v.eliminados;
 
-                    // Soma Depósitos e Amostras
-                    contadores.A1 += v.dep_A1; contadores.A2 += v.dep_A2;
-                    contadores.B += v.dep_B; contadores.C_dep += v.dep_C;
-                    contadores.D1 += v.dep_D1; contadores.D2 += v.dep_D2;
-                    contadores.E += v.dep_E;
-                    contadores.tubitos += v.tubitos;
-                    contadores.eliminados += v.eliminados;
-
-                    // Conta a produtividade do Agente
                     if (!agentes[v.agente]) agentes[v.agente] = 0;
                     agentes[v.agente]++;
                 }
             });
 
-            // Atualiza os Textos na Tela
             document.getElementById('lbl-bairro').innerText = bairro;
             document.getElementById('lbl-semana').innerText = semana;
             document.getElementById('lbl-tipo').innerText = tipoRelatorio.toUpperCase();
 
-            document.getElementById('r-R').innerText = contadores.R;
-            document.getElementById('r-C').innerText = contadores.C;
-            document.getElementById('r-TB').innerText = contadores.TB;
-            document.getElementById('r-PE').innerText = contadores.PE;
-            document.getElementById('r-Outro').innerText = contadores.Outros;
-            document.getElementById('r-TotalImoveis').innerText = (contadores.R + contadores.C + contadores.TB + contadores.PE + contadores.Outros);
+            document.getElementById('r-R').innerText = contadores.R; document.getElementById('r-C').innerText = contadores.C; document.getElementById('r-TB').innerText = contadores.TB; document.getElementById('r-PE').innerText = contadores.PE; document.getElementById('r-Outro').innerText = contadores.Outros; document.getElementById('r-TotalImoveis').innerText = (contadores.R + contadores.C + contadores.TB + contadores.PE + contadores.Outros);
+            document.getElementById('r-N').innerText = contadores.N; document.getElementById('r-F').innerText = contadores.F; document.getElementById('r-Rec').innerText = contadores.Rec;
+            document.getElementById('r-A1').innerText = contadores.A1; document.getElementById('r-A2').innerText = contadores.A2; document.getElementById('r-B').innerText = contadores.B; document.getElementById('r-Cdep').innerText = contadores.C_dep; document.getElementById('r-D1').innerText = contadores.D1; document.getElementById('r-D2').innerText = contadores.D2; document.getElementById('r-E').innerText = contadores.E; document.getElementById('r-TotalDep').innerText = (contadores.A1 + contadores.A2 + contadores.B + contadores.C_dep + contadores.D1 + contadores.D2 + contadores.E);
+            document.getElementById('r-Tubitos').innerText = contadores.tubitos; document.getElementById('r-Eliminados').innerText = contadores.eliminados;
 
-            document.getElementById('r-N').innerText = contadores.N;
-            document.getElementById('r-F').innerText = contadores.F;
-            document.getElementById('r-Rec').innerText = contadores.Rec;
-
-            document.getElementById('r-A1').innerText = contadores.A1;
-            document.getElementById('r-A2').innerText = contadores.A2;
-            document.getElementById('r-B').innerText = contadores.B;
-            document.getElementById('r-Cdep').innerText = contadores.C_dep;
-            document.getElementById('r-D1').innerText = contadores.D1;
-            document.getElementById('r-D2').innerText = contadores.D2;
-            document.getElementById('r-E').innerText = contadores.E;
-            document.getElementById('r-TotalDep').innerText = (contadores.A1 + contadores.A2 + contadores.B + contadores.C_dep + contadores.D1 + contadores.D2 + contadores.E);
-
-            document.getElementById('r-Tubitos').innerText = contadores.tubitos;
-            document.getElementById('r-Eliminados').innerText = contadores.eliminados;
-
-            // Lista os Agentes que trabalharam
             const divAgentes = document.getElementById('lista-agentes');
             divAgentes.innerHTML = '';
             let temAgente = false;
@@ -468,25 +580,8 @@
             }
             if (!temAgente) divAgentes.innerHTML = '<div class="text-muted py-2"><small>Nenhum agente registrou visitas neste filtro.</small></div>';
 
-            // Mostra o resultado
             document.getElementById('resultado-relatorio').style.display = 'block';
         }
-
-        // ==========================================
-        // MAPA DO DASHBOARD
-        // ==========================================
-        document.addEventListener('DOMContentLoaded', function() {
-            var map = L.map('map').setView([-10.0116, -51.1186], 13);
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' }).addTo(map);
-            var marcadores = JSON.parse('{{ marcadores_json|escapejs }}');
-            var iconeVermelho = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-red.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
-            marcadores.forEach(function(m) { if(m.lat && m.lng) { L.marker([m.lat, m.lng], {icon: iconeVermelho}).addTo(map).bindPopup('<b>Foco Encontrado!</b><br>' + m.descricao); } });
-            var triggerTabList = [].slice.call(document.querySelectorAll('#menu-tabs button'))
-            triggerTabList.forEach(function (triggerEl) {
-                var tabTrigger = new bootstrap.Tab(triggerEl)
-                triggerEl.addEventListener('shown.bs.tab', function (event) { if(event.target.id === 'tab-dashboard'){ setTimeout(function(){ map.invalidateSize(); }, 100); } })
-            });
-        });
     </script>
 </body>
 </html>
