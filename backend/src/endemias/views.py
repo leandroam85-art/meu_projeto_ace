@@ -19,7 +19,6 @@ from django.utils import timezone
 def consertar_banco_de_dados():
     try:
         with connection.cursor() as cursor:
-            # 1. Cria a Tabela de Vacinação (se não existir)
             cursor.execute('''
                 CREATE TABLE IF NOT EXISTS endemias_vacinacaoantirrabica (
                     id serial PRIMARY KEY,
@@ -31,7 +30,6 @@ def consertar_banco_de_dados():
                     localizacao geometry(POINT,4326)
                 );
             ''')
-            # 2. Adiciona as colunas de Latitude e Longitude (que causaram o Erro 500)
             cursor.execute('ALTER TABLE endemias_imovel ADD COLUMN IF NOT EXISTS latitude double precision;')
             cursor.execute('ALTER TABLE endemias_imovel ADD COLUMN IF NOT EXISTS longitude double precision;')
     except Exception as e:
@@ -62,6 +60,28 @@ def dashboard_supervisor(request):
                 novo_user = User.objects.create_user(username=username, password=senha)
                 Agente.objects.create(user=novo_user, nome=nome) 
                 messages.success(request, f'Agente {nome} cadastrado com sucesso!')
+        # NOVA AÇÃO: EDITAR AGENTE =======================================
+        elif acao == 'editar':
+            agente_id = request.POST.get('agente_id')
+            novo_nome = request.POST.get('nome')
+            novo_username = request.POST.get('username')
+            nova_senha = request.POST.get('senha')
+            try:
+                agente = Agente.objects.get(id=agente_id)
+                user = agente.user
+                if User.objects.filter(username=novo_username).exclude(id=user.id).exists():
+                    messages.error(request, f'Erro: O usuário "{novo_username}" já está sendo usado por outro agente!')
+                else:
+                    agente.nome = novo_nome
+                    agente.save()
+                    user.username = novo_username
+                    if nova_senha: # Só muda a senha se o supervisor digitar algo
+                        user.set_password(nova_senha)
+                    user.save()
+                    messages.success(request, f'Dados do agente {novo_nome} atualizados com sucesso!')
+            except Exception as e:
+                messages.error(request, 'Erro ao editar os dados do agente.')
+        # ================================================================
         elif acao == 'redefinir_senha':
             agente_id = request.POST.get('agente_id')
             nova_senha = request.POST.get('nova_senha')
@@ -90,9 +110,6 @@ def dashboard_supervisor(request):
     visitas_pe = Visita.objects.filter(imovel__tipo='PE').select_related('imovel', 'agente').order_by('-data_visita')[:500]
     todas_visitas = Visita.objects.select_related('imovel', 'agente').order_by('imovel__bairro', 'imovel__quarteirao', '-data_visita')
     
-    # ----------------------------------------------------
-    # DADOS DA ZOONOSE (VACINAÇÃO)
-    # ----------------------------------------------------
     todas_vacinacoes = VacinacaoAntirrabica.objects.select_related('agente').order_by('-data_vacinacao')
     total_caes = sum(v.caes_vacinados for v in todas_vacinacoes)
     total_gatos = sum(v.gatos_vacinados for v in todas_vacinacoes)
@@ -122,9 +139,6 @@ def dashboard_supervisor(request):
         })
     vacinacoes_json = json.dumps(vacinacoes_json_list)
 
-    # ----------------------------------------------------
-    # PACOTE DO PNCD (VISITAS)
-    # ----------------------------------------------------
     visitas_json_list = []
     for v in todas_visitas:
         lat, lng = None, None

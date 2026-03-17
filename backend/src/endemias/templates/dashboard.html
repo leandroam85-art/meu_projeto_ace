@@ -300,7 +300,6 @@
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-secondary"><i class="fa-solid fa-dog me-2" style="color: #FFD54F;"></i> Vacinação Antirrábica (Zoonose)</h2>
                 </div>
-                
                 <div class="row g-4 mb-4">
                     <div class="col-md-4">
                         <div class="card stat-card bg-white h-100 p-3 border-start border-4" style="border-color: #8D6E63 !important;">
@@ -362,8 +361,7 @@
                     <label class="text-muted small ms-2">Filtrar por Agente</label>
                     <select id="rel-zoo-agente" class="form-select mb-4 border-0 py-3 text-dark fw-bold">
                         <option value="">Todos os Agentes (Visão Geral)</option>
-                        </select>
-                    
+                    </select>
                     <button class="btn-calcular w-100 py-3" onclick="gerarRelatorioZoonoseJS()" style="background-color: #8D6E63;">
                         <i class="fa-solid fa-calculator me-2"></i> Gerar Relatório de Vacinação
                     </button>
@@ -424,11 +422,51 @@
                                             <td class="fw-bold text-dark"><i class="fa-solid fa-user text-muted me-2"></i> {{ agente.nome }}</td>
                                             <td class="text-secondary">{{ agente.user.username }}</td>
                                             <td class="text-end">
+                                                
+                                                <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editModal{{ agente.id }}">
+                                                    <i class="fa-solid fa-pen"></i>
+                                                </button>
+
                                                 <form method="POST" class="d-inline" onsubmit="return confirm('Excluir {{ agente.nome }}?');">
                                                     {% csrf_token %}
                                                     <input type="hidden" name="acao" value="excluir"><input type="hidden" name="agente_id" value="{{ agente.id }}">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash-can"></i></button>
                                                 </form>
+
+                                                <div class="modal fade" id="editModal{{ agente.id }}" tabindex="-1" aria-hidden="true">
+                                                    <div class="modal-dialog">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header bg-primary text-white">
+                                                                <h5 class="modal-title"><i class="fa-solid fa-user-pen me-2"></i> Editar Agente</h5>
+                                                                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <form method="POST">
+                                                                {% csrf_token %}
+                                                                <div class="modal-body text-start">
+                                                                    <input type="hidden" name="acao" value="editar">
+                                                                    <input type="hidden" name="agente_id" value="{{ agente.id }}">
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label text-muted fw-bold">Nome Completo</label>
+                                                                        <input type="text" name="nome" class="form-control" value="{{ agente.nome }}" required>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label text-muted fw-bold">Login do App</label>
+                                                                        <input type="text" name="username" class="form-control" value="{{ agente.user.username }}" required>
+                                                                    </div>
+                                                                    <div class="mb-3">
+                                                                        <label class="form-label text-muted fw-bold">Nova Senha</label>
+                                                                        <input type="password" name="senha" class="form-control" placeholder="Deixe em branco para não alterar">
+                                                                    </div>
+                                                                </div>
+                                                                <div class="modal-footer">
+                                                                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                                                                    <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save me-2"></i> Salvar</button>
+                                                                </div>
+                                                            </form>
+                                                        </div>
+                                                    </div>
+                                                </div>
+
                                             </td>
                                         </tr>
                                         {% empty %}
