@@ -38,6 +38,8 @@
         /* Estilos EXATOS do App Mobile para o Histórico */
         .input-mobile { position: relative; border: 2px solid #1E3A8A; border-radius: 12px; padding: 10px 15px; background: white; display: flex; align-items: center; }
         .input-mobile-label { position: absolute; top: -10px; left: 15px; background: white; padding: 0 5px; font-size: 12px; color: #6b7280; }
+        .bairro-header { background-color: #e8f5e9; color: #2e7d32; font-weight: 900; letter-spacing: 0.5px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-top: 15px; border-radius: 6px 6px 0 0; }
+        .bairro-badge { background-color: #388e3c; color: white; border-radius: 20px; padding: 5px 12px; font-size: 12px; font-weight: bold; }
         
         @media print {
             .sidebar, .btn, .caixa-filtro, .alert, .input-mobile { display: none !important; }
@@ -343,7 +345,6 @@
         // MOTOR DE DADOS JAVASCRIPT
         // ----------------------------------------------------
         
-        // Recebe o pacote cru de visitas do servidor
         const visitasDB = JSON.parse('{{ visitas_json|escapejs }}');
         
         document.addEventListener('DOMContentLoaded', function() {
@@ -359,18 +360,15 @@
                 triggerEl.addEventListener('shown.bs.tab', function (event) { if(event.target.id === 'tab-dashboard'){ setTimeout(function(){ map.invalidateSize(); }, 100); } })
             });
 
-            // Preenche as semanas dos dropdowns
+            // Preenche as 52 Semanas FIXO (Para não faltar nenhuma)
             const selectRelSemana = document.getElementById('rel-semana');
             const selectHistSemana = document.getElementById('hist-semana');
             
-            let semanasUnicas = [...new Set(visitasDB.map(v => parseInt(v.semana)))].filter(n => !isNaN(n)).sort((a,b) => b - a);
-            
-            semanasUnicas.forEach(i => {
-                let opt1 = document.createElement('option'); opt1.value = i; opt1.text = `Semana ${i}`; selectRelSemana.appendChild(opt1);
-                let opt2 = document.createElement('option'); opt2.value = i; opt2.text = `Semana ${i}`; selectHistSemana.appendChild(opt2);
-            });
+            for(let i=1; i<=52; i++) {
+                let opt1 = document.createElement('option'); opt1.value = i.toString(); opt1.text = `Semana ${i}`; selectRelSemana.appendChild(opt1);
+                let opt2 = document.createElement('option'); opt2.value = i.toString(); opt2.text = `Semana ${i}`; selectHistSemana.appendChild(opt2);
+            }
 
-            // Já renderiza o histórico
             renderHistoricoJS();
         });
 
@@ -422,10 +420,11 @@
                 
                 // 1. CABEÇALHO DO BAIRRO (Verde igual à imagem)
                 html += `
-                <div class="d-flex justify-content-between align-items-center mt-4 mb-3 px-3 py-2 rounded" style="background-color: #e8f5e9;">
-                    <h6 class="fw-bold mb-0" style="color: #2e7d32; letter-spacing: 1px;">${bairro}</h6>
-                    <span class="badge rounded-pill px-3 py-2" style="background-color: #388e3c;">${dadosBairro.total} VISITAS</span>
+                <div class="bairro-header mt-4 mb-2">
+                    <span>${bairro}</span>
+                    <span class="bairro-badge">${dadosBairro.total} VISITAS</span>
                 </div>
+                <div class="p-2 pt-3" style="background-color: #f8f9fa; border-radius: 0 0 8px 8px; margin-bottom: 20px;">
                 `;
 
                 let accordionId = `acc-bairro-${bId++}`;
@@ -486,7 +485,7 @@
                                         </div>
                             `;
 
-                            // 5. DETALHES DA VISITA DENTRO DO IMÓVEL
+                            // 5. DETALHES DA VISITA
                             imovel.visitas.forEach(v => {
                                 let txtStatus = v.status === 'N' ? 'N' : (v.status === 'F' ? 'F' : 'R');
                                 let corIcon = v.status === 'N' ? '#4caf50' : '#e53935';
@@ -502,10 +501,10 @@
                                             <div class="d-flex align-items-center text-muted small mb-1">
                                                 <i class="fa-regular fa-calendar-days me-2 text-danger"></i> ${dataFmt}
                                             </div>
-                                            <div class="text-muted small">
+                                            <div class="text-muted small mb-1">
                                                 Tubitos: ${v.tubitos}
                                             </div>
-                                            <div class="text-muted small mt-1">
+                                            <div class="text-muted small">
                                                 <i class="fa-solid fa-user-check me-1 text-success"></i> Agente: ${v.agente}
                                             </div>
                                         </div>
@@ -525,7 +524,7 @@
                     </div>
                     `;
                 });
-                html += `</div>`; 
+                html += `</div></div>`; 
             });
 
             container.innerHTML = html;
