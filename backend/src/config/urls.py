@@ -1,14 +1,10 @@
 from django.contrib import admin
 from django.urls import path, include
-from endemias import views
 
 urlpatterns = [
-    # Dashboard principal
-    path('', views.dashboard_supervisor, name='dashboard'),
-    
-    # Painel de Administração
+    # Painel de Administração Padrão do Django
     path('admin/', admin.site.urls),
     
-    # API do Celular (chama o arquivo que limpamos no passo 1)
-    path('api/', include('endemias.urls')),
+    # Repassa TUDO (Dashboard e API) para as rotas do app endemias
+    path('', include('endemias.urls')),
 ]

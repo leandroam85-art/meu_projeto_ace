@@ -9,9 +9,32 @@ from rest_framework.permissions import AllowAny
 from rest_framework.response import Response
 from django.contrib.auth import authenticate
 from rest_framework.authtoken.models import Token
-from django.db import models
+from django.db import models, connection
 from django.contrib.gis.geos import Point 
 from django.utils import timezone
+
+# =====================================================================
+# TRUQUE JEDI: FORÇAR CRIAÇÃO DA TABELA DE VACINAÇÃO IGNORANDO ERROS
+# =====================================================================
+def consertar_banco_de_dados():
+    try:
+        with connection.cursor() as cursor:
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS endemias_vacinacaoantirrabica (
+                    id serial PRIMARY KEY,
+                    agente_id bigint REFERENCES endemias_agente(id) DEFERRABLE INITIALLY DEFERRED,
+                    localidade varchar(255),
+                    caes_vacinados integer NOT NULL,
+                    gatos_vacinados integer NOT NULL,
+                    data_vacinacao timestamp with time zone,
+                    localizacao geometry(POINT,4326)
+                );
+            ''')
+    except Exception as e:
+        pass
+
+consertar_banco_de_dados()
+# =====================================================================
 
 def converte_seguro(modelo, campo, valor):
     try:
@@ -63,6 +86,41 @@ def dashboard_supervisor(request):
     visitas_pe = Visita.objects.filter(imovel__tipo='PE').select_related('imovel', 'agente').order_by('-data_visita')[:500]
     todas_visitas = Visita.objects.select_related('imovel', 'agente').order_by('imovel__bairro', 'imovel__quarteirao', '-data_visita')
     
+    # ----------------------------------------------------
+    # DADOS DA ZOONOSE (VACINAÇÃO)
+    # ----------------------------------------------------
+    todas_vacinacoes = VacinacaoAntirrabica.objects.select_related('agente').order_by('-data_vacinacao')
+    total_caes = sum(v.caes_vacinados for v in todas_vacinacoes)
+    total_gatos = sum(v.gatos_vacinados for v in todas_vacinacoes)
+    
+    vacinacoes_json_list = []
+    for v in todas_vacinacoes:
+        lat, lng = None, None
+        try:
+            if hasattr(v, 'localizacao') and v.localizacao:
+                lng = float(v.localizacao.x)
+                lat = float(v.localizacao.y)
+        except: pass
+        
+        dt_str = 'S/D'
+        if v.data_vacinacao:
+            try: dt_str = timezone.localtime(v.data_vacinacao).strftime('%d/%m/%Y às %H:%M')
+            except: dt_str = v.data_vacinacao.strftime('%d/%m/%Y às %H:%M')
+
+        vacinacoes_json_list.append({
+            'agente': v.agente.nome if v.agente else 'Sem Agente',
+            'localidade': v.localidade or 'Não Informada',
+            'caes': v.caes_vacinados,
+            'gatos': v.gatos_vacinados,
+            'data_vacinacao': dt_str,
+            'lat': lat,
+            'lng': lng
+        })
+    vacinacoes_json = json.dumps(vacinacoes_json_list)
+
+    # ----------------------------------------------------
+    # PACOTE DO PNCD (VISITAS)
+    # ----------------------------------------------------
     visitas_json_list = []
     for v in todas_visitas:
         lat, lng = None, None
@@ -116,6 +174,8 @@ def dashboard_supervisor(request):
         'total_visitas': total_visitas, 'focos_dengue': focos_dengue, 'agentes_ativos': agentes_ativos,
         'agentes_lista': agentes_lista, 'marcadores_json': marcadores_json, 'visitas_rotina': visitas_rotina, 
         'visitas_pe': visitas_pe, 'todas_visitas': todas_visitas, 'visitas_json': visitas_json, 
+        # ENVIANDO DADOS DA ZOONOSE PARA O HTML
+        'todas_vacinacoes': todas_vacinacoes, 'total_caes': total_caes, 'total_gatos': total_gatos, 'vacinacoes_json': vacinacoes_json
     }
     return render(request, 'dashboard.html', contexto)
 
@@ -228,9 +288,6 @@ def api_visitas(request, pk=None):
             return Response({"id": visita.id}, status=200)
         except Exception as e: return Response({"erro": str(e)}, status=400)
 
-# =========================================================
-# NOVA ROTA: RECEBENDO DADOS DE VACINAÇÃO DA ZOONOSE
-# =========================================================
 @api_view(['POST'])
 @permission_classes([AllowAny])
 def api_vacinacao(request):
