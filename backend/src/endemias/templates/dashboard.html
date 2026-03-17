@@ -21,7 +21,16 @@
         .stat-card { border: none; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); transition: transform 0.2s; }
         .stat-card:hover { transform: translateY(-5px); }
         .icon-box { width: 60px; height: 60px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 24px; color: white; }
-        #map { height: 450px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 2px solid #fff; }
+        
+        /* O MAPA AGORA CALCULA O TAMANHO DA TELA AUTOMATICAMENTE */
+        #map { 
+            height: calc(100vh - 300px); 
+            min-height: 500px; 
+            border-radius: 12px; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
+            border: 2px solid #fff; 
+            z-index: 1;
+        }
         
         .caixa-filtro { background-color: #f1f3f5; border-radius: 12px; padding: 25px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
         .btn-calcular { background-color: #78909c; color: white; border: none; border-radius: 8px; font-weight: bold; transition: 0.3s; }
@@ -115,7 +124,7 @@
                     </div>
                 </div>
 
-                <div class="card stat-card bg-white p-3">
+                <div class="card stat-card bg-white p-3 mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
                         <h5 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-map-location-dot me-2"></i> Mapa de Visitas (Varredura)</h5>
                         <div class="d-flex gap-2">
@@ -354,30 +363,17 @@
 
         document.addEventListener('DOMContentLoaded', function() {
             
-            // ----------------------------------------------------
-            // CRIAÇÃO DAS CAMADAS DO MAPA (RUAS vs SATÉLITE)
-            // ----------------------------------------------------
-            var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', {
-                maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google'
-            });
-            var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google'
-            });
-            var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', {
-                maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google'
-            });
-            var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { 
-                attribution: '&copy; OpenStreetMap' 
-            });
+            var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
+            var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
+            var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
+            var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' });
 
-            // Inicia o mapa com a camada de Ruas do Google por padrão
             map = L.map('map', {
                 center: [-10.0116, -51.1186],
                 zoom: 13,
                 layers: [googleStreets]
             });
 
-            // Adiciona a caixinha de controle no canto superior direito do mapa
             var baseMaps = {
                 "Google Ruas (Padrão)": googleStreets,
                 "Google Satélite (Puro)": googleSat,
@@ -412,9 +408,6 @@
             renderMapaJS();
         });
 
-        // ========================================================
-        // MÁGICA DO MAPA COM FILTROS
-        // ========================================================
         function renderMapaJS() {
             if(markerLayer) { map.removeLayer(markerLayer); }
             markerLayer = L.layerGroup().addTo(map);
@@ -444,9 +437,6 @@
             });
         }
 
-        // ========================================================
-        // MÁGICA DO HISTÓRICO AGRUPADO
-        // ========================================================
         function renderHistoricoJS() {
             const semanaSelecionada = document.getElementById('hist-semana').value;
             const container = document.getElementById('resultado-historico');
@@ -588,9 +578,6 @@
             container.innerHTML = html;
         }
 
-        // ==========================================
-        // GERADOR DE RELATÓRIO PNCD
-        // ==========================================
         function gerarFechamentoJS() {
             const bairro = document.getElementById('rel-bairro').value;
             const semana = document.getElementById('rel-semana').value;
