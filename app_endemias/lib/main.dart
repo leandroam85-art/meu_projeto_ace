@@ -414,9 +414,9 @@ class _TelaInicialState extends State<TelaInicial> {
     for (int i = 1; i <= 52; i++) {
       DateTime dataFim = dataAtual.add(const Duration(days: 6));
       int ciclo = 1;
-      if (i >= 9 && i <= 17)
+      if (i >= 9 && i <= 17) {
         ciclo = 2;
-      else if (i >= 18 && i <= 26)
+      } else if (i >= 18 && i <= 26)
         ciclo = 3;
       else if (i >= 27 && i <= 34)
         ciclo = 4;
@@ -863,9 +863,9 @@ class _TelaCadastroImovelState extends State<TelaCadastroImovel> {
       _quart.text = widget.imovelExistente!['quarteirao']?.toString() ?? '';
       String sigla = widget.imovelExistente!['tipo'] ?? 'R';
 
-      if (sigla == 'C')
+      if (sigla == 'C') {
         _tipo = 'Comercial';
-      else if (sigla == 'TB')
+      } else if (sigla == 'TB')
         _tipo = 'Terreno Baldio';
       else if (sigla == 'PE')
         _tipo = 'Ponto Estratégico';
@@ -1042,9 +1042,9 @@ class _TelaCadastroImovelState extends State<TelaCadastroImovel> {
                       setState(() => enviando = true);
 
                       String tipoSigla = 'R';
-                      if (_tipo == 'Comercial')
+                      if (_tipo == 'Comercial') {
                         tipoSigla = 'C';
-                      else if (_tipo == 'Terreno Baldio')
+                      } else if (_tipo == 'Terreno Baldio')
                         tipoSigla = 'TB';
                       else if (_tipo == 'Ponto Estratégico')
                         tipoSigla = 'PE';
@@ -1160,6 +1160,8 @@ class _TelaCadastroImovelState extends State<TelaCadastroImovel> {
 // NOVA TELA DE VACINAÇÃO ANTIRRÁBICA
 // =============================================================================
 class TelaVacinacao extends StatefulWidget {
+  const TelaVacinacao({super.key});
+
   @override
   State<TelaVacinacao> createState() => _TelaVacinacaoState();
 }
@@ -1455,7 +1457,7 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
       body: FutureBuilder<List<dynamic>>(
         future: _carregarImoveis(),
         builder: (c, s) {
-          if (s.hasError)
+          if (s.hasError) {
             return Center(
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1473,8 +1475,10 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
                 ],
               ),
             );
-          if (!s.hasData)
+          }
+          if (!s.hasData) {
             return const Center(child: CircularProgressIndicator());
+          }
           List<dynamic> imoveis = s.data!;
           Map<String, Map<String, List<dynamic>>> agrupado = {};
           for (int i = 1; i <= widget.totalQuarteiroes; i++) {
@@ -1493,8 +1497,9 @@ class _TelaListaImoveisState extends State<TelaListaImoveis> {
                 ? "Rua Não Informada"
                 : im['endereco'].toString();
             if (!agrupado.containsKey(quarteirao)) agrupado[quarteirao] = {};
-            if (!agrupado[quarteirao]!.containsKey(rua))
+            if (!agrupado[quarteirao]!.containsKey(rua)) {
               agrupado[quarteirao]![rua] = [];
+            }
             agrupado[quarteirao]![rua]!.add(im);
           }
           List<String> quarteiroes = agrupado.keys.toList();
@@ -1712,12 +1717,13 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
         "quantidade_larvas": vp['quantidade_larvas'],
       });
     }
-    if (_semanaSelecionada != null)
+    if (_semanaSelecionada != null) {
       visitas = visitas
           .where(
             (v) => v['semana_epidemiologica'] == _semanaSelecionada!['semana'],
           )
           .toList();
+    }
     Map<String, dynamic> mapaImoveis = {
       for (var im in imoveis) im['id'].toString(): im,
     };
@@ -1746,10 +1752,12 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
       String tipo = im['tipo'] ?? 'R';
       String imId = v['imovel'].toString();
       if (!agrupado.containsKey(bairro)) agrupado[bairro] = {};
-      if (!agrupado[bairro]!.containsKey(quarteirao))
+      if (!agrupado[bairro]!.containsKey(quarteirao)) {
         agrupado[bairro]![quarteirao] = {};
-      if (!agrupado[bairro]![quarteirao]!.containsKey(rua))
+      }
+      if (!agrupado[bairro]![quarteirao]!.containsKey(rua)) {
         agrupado[bairro]![quarteirao]![rua] = {};
+      }
       if (!agrupado[bairro]![quarteirao]![rua]!.containsKey(imId)) {
         agrupado[bairro]![quarteirao]![rua]![imId] = {
           "imovel_completo": im,
@@ -1795,7 +1803,7 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
                         child: Text('Semana ${s['semana']} (${s['inicio']})'),
                       ),
                     )
-                    .toList(),
+                    ,
               ],
               onChanged: (v) => setState(() => _semanaSelecionada = v),
             ),
@@ -1804,42 +1812,46 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
             child: FutureBuilder<Map<String, Map<String, Map<String, Map<String, dynamic>>>>>(
               future: _buscarAgrupado(),
               builder: (context, snapshot) {
-                if (snapshot.hasError)
+                if (snapshot.hasError) {
                   return const Center(
                     child: Text('Nenhum dado salvo no celular.'),
                   );
-                if (!snapshot.hasData)
+                }
+                if (!snapshot.hasData) {
                   return const Center(child: CircularProgressIndicator());
+                }
                 final dados = snapshot.data!;
                 final bairros = dados.keys.toList()..sort();
-                if (bairros.isEmpty)
+                if (bairros.isEmpty) {
                   return const Center(
                     child: Text(
                       'Nenhuma visita registrada.',
                       style: TextStyle(fontSize: 16, color: Colors.grey),
                     ),
                   );
+                }
                 return ListView.builder(
                   itemCount: bairros.length,
                   itemBuilder: (context, index) {
                     String bairro = bairros[index];
                     var quarteiroesDoBairro = dados[bairro]!;
                     int totalVisitasBairro = 0;
-                    quarteiroesDoBairro.values.forEach((ruas) {
-                      ruas.values.forEach((imoveis) {
-                        imoveis.values.forEach((imovel) {
+                    for (var ruas in quarteiroesDoBairro.values) {
+                      for (var imoveis in ruas.values) {
+                        for (var imovel in imoveis.values) {
                           totalVisitasBairro +=
                               (imovel['visitas'] as List).length;
-                        });
-                      });
-                    });
+                        }
+                      }
+                    }
                     List<String> quarteiroes = quarteiroesDoBairro.keys
                         .toList();
                     quarteiroes.sort((a, b) {
                       int? numA = int.tryParse(a);
                       int? numB = int.tryParse(b);
-                      if (numA != null && numB != null)
+                      if (numA != null && numB != null) {
                         return numA.compareTo(numB);
+                      }
                       if (numA != null) return -1;
                       if (numB != null) return 1;
                       return a.compareTo(b);
@@ -2076,13 +2088,13 @@ class _TelaHistoricoVisitasState extends State<TelaHistoricoVisitas> {
                                           }).toList(),
                                         ),
                                       );
-                                    }).toList(),
+                                    }),
                                   ],
                                 );
                               }).toList(),
                             ),
                           );
-                        }).toList(),
+                        }),
                         const SizedBox(height: 20),
                       ],
                     );
@@ -2194,7 +2206,7 @@ class _TelaVisitaState extends State<TelaVisita> {
     _obs = TextEditingController(text: v?['observacoes'] ?? '');
     if (v != null) _status = v['status'];
     _calcularTotalDepositos();
-    [
+    for (var c in [
       _depA1,
       _depA2,
       _depB,
@@ -2202,7 +2214,9 @@ class _TelaVisitaState extends State<TelaVisita> {
       _depD1,
       _depD2,
       _depE,
-    ].forEach((c) => c.addListener(_calcularTotalDepositos));
+    ]) {
+      c.addListener(_calcularTotalDepositos);
+    }
   }
 
   Widget _bloco(String t, Color c, List<Widget> f) {
@@ -2759,9 +2773,9 @@ class _TelaRelatoriosState extends State<TelaRelatorios> {
               imovelRelacionado['bairro'] == _bairroSelecionado!['nome']) {
             String tipo = imovelRelacionado['tipo'] ?? 'R';
             if (_tipoRelatorio == 'Apenas PE' && tipo != 'PE') continue;
-            if (tipo == 'R')
+            if (tipo == 'R') {
               tRes++;
-            else if (tipo == 'C')
+            } else if (tipo == 'C')
               tCom++;
             else if (tipo == 'TB')
               tTB++;
@@ -2769,9 +2783,9 @@ class _TelaRelatoriosState extends State<TelaRelatorios> {
               tPE++;
             else
               tOutro++;
-            if (v['status'] == 'N')
+            if (v['status'] == 'N') {
               tInsp++;
-            else if (v['status'] == 'F')
+            } else if (v['status'] == 'F')
               tFechado++;
             else if (v['status'] == 'R')
               tRecusa++;

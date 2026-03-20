@@ -95,16 +95,18 @@
         <div class="tab-content" id="meus-conteudos">
             
             <div class="tab-pane fade show active" id="conteudo-dashboard" role="tabpanel">
-                <div class="d-flex justify-content-between align-items-center mb-4">
-                    <h2 class="fw-bold text-secondary"><i class="fa-solid fa-chart-line me-2"></i> Visão Geral</h2>
-                    <span class="badge bg-primary fs-6 p-2"><i class="fa-regular fa-calendar"></i> {% now "d/m/Y" %}</span>
+                <div class="d-flex justify-content-between align-items-center mb-4 flex-wrap gap-2">
+                    <h2 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-chart-line me-2"></i> Visão Geral</h2>
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <span class="badge bg-primary fs-6 p-2"><i class="fa-regular fa-clock me-1"></i><span id="relogio-top">Carregando...</span></span>
+                    </div>
                 </div>
                 <div class="row g-4 mb-4">
                     <div class="col-md-4">
                         <div class="card stat-card bg-white h-100 p-3 border-start border-primary border-4">
                             <div class="d-flex align-items-center">
                                 <div class="icon-box bg-primary shadow-sm"><i class="fa-solid fa-house-circle-check"></i></div>
-                                <div class="ms-3"><h6 class="text-muted mb-0">Total de Visitas Realizadas</h6><h3 class="fw-bold mb-0 text-dark">{{ total_visitas }}</h3></div>
+                                <div class="ms-3"><h6 class="text-muted mb-0">Total de Visitas</h6><h3 class="fw-bold mb-0 text-dark" id="card-total-visitas">{{ total_visitas }}</h3></div>
                             </div>
                         </div>
                     </div>
@@ -112,7 +114,7 @@
                         <div class="card stat-card bg-white h-100 p-3 border-start border-danger border-4">
                             <div class="d-flex align-items-center">
                                 <div class="icon-box bg-danger shadow-sm"><i class="fa-solid fa-biohazard"></i></div>
-                                <div class="ms-3"><h6 class="text-muted mb-0">Focos de Dengue (Com Coleta)</h6><h3 class="fw-bold mb-0 text-dark">{{ focos_dengue }}</h3></div>
+                                <div class="ms-3"><h6 class="text-muted mb-0">Focos de Dengue</h6><h3 class="fw-bold mb-0 text-dark" id="card-total-focos">{{ focos_dengue }}</h3></div>
                             </div>
                         </div>
                     </div>
@@ -128,7 +130,7 @@
 
                 <div class="card stat-card bg-white p-3 mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-map-location-dot me-2"></i> Mapa de Visitas (Varredura)</h5>
+                        <h5 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-map-location-dot me-2"></i> Mapa e Dados Consolidados</h5>
                         <div class="d-flex gap-2">
                             <select id="map-semana" class="form-select form-select-sm border border-secondary fw-bold" style="width: 150px;" onchange="renderMapaJS()">
                                 <option value="">Todas Semanas</option>
@@ -499,6 +501,16 @@
         const iconeFechada = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
         const iconeZoonose = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
 
+        // ==========================================
+        // RELÓGIO EM TEMPO REAL
+        // ==========================================
+        function atualizarRelogio() {
+            const agora = new Date();
+            document.getElementById('relogio-top').innerText = agora.toLocaleString('pt-BR', { timeZone: 'America/Cuiaba' });
+        }
+        setInterval(atualizarRelogio, 1000);
+        atualizarRelogio(); 
+
         document.addEventListener('DOMContentLoaded', function() {
             
             var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
@@ -538,7 +550,7 @@
                 })
             });
 
-            // FILTROS PNCD
+            // PREENCHIMENTO DOS FILTROS
             const selectRelSemana = document.getElementById('rel-semana');
             const selectHistSemana = document.getElementById('hist-semana');
             const selectMapSemana = document.getElementById('map-semana');
@@ -551,8 +563,15 @@
             }
 
             let agentesUnicos = [...new Set(visitasDB.map(v => v.agente))].filter(n => n && n !== "Sem Agente").sort();
-            const selectMapAgente = document.getElementById('map-agente'); const selectRotinaAgente = document.getElementById('filtro-rotina-agente'); const selectPEAgente = document.getElementById('filtro-pe-agente');
-            agentesUnicos.forEach(ag => { selectMapAgente.appendChild(new Option(ag, ag)); selectRotinaAgente.appendChild(new Option(ag, ag)); selectPEAgente.appendChild(new Option(ag, ag)); });
+            const selectMapAgente = document.getElementById('map-agente'); 
+            const selectRotinaAgente = document.getElementById('filtro-rotina-agente'); 
+            const selectPEAgente = document.getElementById('filtro-pe-agente');
+            
+            agentesUnicos.forEach(ag => { 
+                selectMapAgente.appendChild(new Option(ag, ag)); 
+                selectRotinaAgente.appendChild(new Option(ag, ag)); 
+                selectPEAgente.appendChild(new Option(ag, ag)); 
+            });
 
             let bairrosUnicos = [...new Set(visitasDB.map(v => v.bairro))].filter(n => n && n !== "Sem Bairro").sort();
             const selectRotinaBairro = document.getElementById('filtro-rotina-bairro'); const selectPEBairro = document.getElementById('filtro-pe-bairro');
@@ -570,6 +589,62 @@
             renderTabelaRotinaJS();
             renderTabelaPEJS();
         });
+
+        // ==========================================
+        // AUTO-ATUALIZAÇÃO INVISÍVEL
+        // ==========================================
+        setInterval(function() {
+            fetch(window.location.href)
+            .then(res => res.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const filtroSemana = document.getElementById('map-semana').value;
+                const filtroAgente = document.getElementById('map-agente').value;
+                
+                // Só atualiza os números sozinho se não tiver nenhum filtro selecionado
+                if (filtroSemana === "" && filtroAgente === "") {
+                    document.getElementById('card-total-visitas').innerText = doc.getElementById('card-total-visitas').innerText;
+                    document.getElementById('card-total-focos').innerText = doc.getElementById('card-total-focos').innerText;
+                }
+            })
+            .catch(err => console.log("Erro na auto-atualização", err));
+        }, 60000); 
+
+        // ==========================================
+        // MAPA E CARTÕES SUPERIORES (Sincronizados)
+        // ==========================================
+        function renderMapaJS() {
+            if(markerLayer) { map.removeLayer(markerLayer); } 
+            markerLayer = L.layerGroup().addTo(map);
+            
+            const sem = document.getElementById('map-semana').value; 
+            const ag = document.getElementById('map-agente').value;
+            
+            let contadorVisitas = 0;
+            let contadorFocos = 0;
+
+            visitasDB.forEach(v => {
+                // Filtra tanto para o mapa quanto para os cartões
+                if (sem !== "" && v.semana !== sem) return; 
+                if (ag !== "" && v.agente !== ag) return;
+                
+                // Atualiza a contagem dos cartões
+                contadorVisitas++;
+                if (v.tubitos > 0) { contadorFocos++; }
+
+                // Pinta no mapa
+                if(v.lat && v.lng) {
+                    let icone = iconeNormal; let txtStatus = 'Normal (Inspecionado)';
+                    if (v.tubitos > 0) { icone = iconeFoco; txtStatus = 'Foco de Dengue!'; } else if (v.status === 'F' || v.status === 'R') { icone = iconeFechada; txtStatus = v.status === 'F' ? 'Fechada' : 'Recusada'; }
+                    let desc = `<b>${txtStatus}</b><br>Nº ${v.numero} - ${v.endereco}<br>Agente: ${v.agente}<br>Tubitos: ${v.tubitos}<br><small>Data: ${v.data_visita}</small>`;
+                    L.marker([v.lat, v.lng], {icon: icone}).bindPopup(desc).addTo(markerLayer);
+                }
+            });
+
+            // Atualiza os números nos cartões azuis e vermelhos instantaneamente
+            document.getElementById('card-total-visitas').innerText = contadorVisitas;
+            document.getElementById('card-total-focos').innerText = contadorFocos;
+        }
 
         // ==========================================
         // GERADOR DE RELATÓRIO DE ZOONOSE
@@ -613,7 +688,7 @@
         }
 
         // ==========================================
-        // FUNÇÕES ANTIGAS PNCD (VISITAS/MAPAS)
+        // FUNÇÕES ANTIGAS PNCD
         // ==========================================
         function renderTabelaRotinaJS() {
             const tbody = document.getElementById('tbody-rotina'); const sem = document.getElementById('filtro-rotina-semana').value; const bairro = document.getElementById('filtro-rotina-bairro').value; const ag = document.getElementById('filtro-rotina-agente').value;
@@ -635,20 +710,6 @@
                 filtradas.forEach(v => { let badgeStatus = v.status === 'N' ? '<span class="badge bg-success">Normal</span>' : (v.status === 'F' ? '<span class="badge bg-warning text-dark">Fechada</span>' : '<span class="badge bg-danger">Recusada</span>'); let badgeTubitos = v.tubitos > 0 ? `<span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> ${v.tubitos}</span>` : `<span class="badge bg-light text-dark border fs-6">0</span>`; html += `<tr><td class="text-secondary fw-bold">${v.data_visita}</td><td><i class="fa-solid fa-user-check text-danger me-2"></i>${v.agente}</td><td><strong>${v.endereco}</strong>, Nº ${v.numero}<br><small class="text-muted">Quadra: ${v.quarteirao}</small></td><td>${v.bairro}</td><td>${badgeStatus}</td><td class="text-center">${badgeTubitos}</td></tr>`; });
             }
             tbody.innerHTML = html;
-        }
-
-        function renderMapaJS() {
-            if(markerLayer) { map.removeLayer(markerLayer); } markerLayer = L.layerGroup().addTo(map);
-            const sem = document.getElementById('map-semana').value; const ag = document.getElementById('map-agente').value;
-            visitasDB.forEach(v => {
-                if(v.lat && v.lng) {
-                    if (sem !== "" && v.semana !== sem) return; if (ag !== "" && v.agente !== ag) return;
-                    let icone = iconeNormal; let txtStatus = 'Normal (Inspecionado)';
-                    if (v.tubitos > 0) { icone = iconeFoco; txtStatus = 'Foco de Dengue!'; } else if (v.status === 'F' || v.status === 'R') { icone = iconeFechada; txtStatus = v.status === 'F' ? 'Fechada' : 'Recusada'; }
-                    let desc = `<b>${txtStatus}</b><br>Nº ${v.numero} - ${v.endereco}<br>Agente: ${v.agente}<br>Tubitos: ${v.tubitos}<br><small>Data: ${v.data_visita}</small>`;
-                    L.marker([v.lat, v.lng], {icon: icone}).bindPopup(desc).addTo(markerLayer);
-                }
-            });
         }
 
         function renderHistoricoJS() {
