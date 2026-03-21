@@ -1,4 +1,3 @@
-{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -58,7 +57,7 @@
 
     <div class="sidebar d-flex flex-column">
         <div class="sidebar-header">
-            <img src="{% static 'img/logo.png' %}" alt="Logo" class="mb-2" style="width: 80px; height: auto;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2822/2822361.png'; this.style.filter='invert(85%) sepia(50%) saturate(1000%) hue-rotate(360deg)';">
+            <i class="fa-solid fa-mosquito fa-3x mb-2 text-warning"></i>
             <h4>SisEndemias</h4>
             <small class="text-light opacity-75">Vila Rica - MT</small>
         </div>
@@ -102,7 +101,6 @@
                         <span class="badge bg-primary fs-6 p-2"><i class="fa-regular fa-clock me-1"></i><span id="relogio-top">Carregando...</span></span>
                     </div>
                 </div>
-                
                 <div class="row g-4 mb-4">
                     <div class="col-md-4">
                         <div class="card stat-card bg-white h-100 p-3 border-start border-primary border-4">
@@ -156,9 +154,15 @@
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                     <h2 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-house-chimney-medical me-2"></i> Inspeções de Rotina</h2>
                     <div class="d-flex gap-2 flex-wrap">
-                        <select id="filtro-rotina-semana" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()"><option value="">Todas Semanas</option></select>
-                        <select id="filtro-rotina-bairro" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()"><option value="">Todos Bairros</option></select>
-                        <select id="filtro-rotina-agente" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()"><option value="">Todos Agentes</option></select>
+                        <select id="filtro-rotina-semana" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()">
+                            <option value="">Todas Semanas</option>
+                        </select>
+                        <select id="filtro-rotina-bairro" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()">
+                            <option value="">Todos Bairros</option>
+                        </select>
+                        <select id="filtro-rotina-agente" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()">
+                            <option value="">Todos Agentes</option>
+                        </select>
                     </div>
                 </div>
                 <div class="card stat-card bg-white p-4">
@@ -175,9 +179,15 @@
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                     <h2 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-industry me-2 text-danger"></i> Pontos Estratégicos (P.E.)</h2>
                     <div class="d-flex gap-2 flex-wrap">
-                        <select id="filtro-pe-semana" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()"><option value="">Todas Semanas</option></select>
-                        <select id="filtro-pe-bairro" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()"><option value="">Todos Bairros</option></select>
-                        <select id="filtro-pe-agente" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()"><option value="">Todos Agentes</option></select>
+                        <select id="filtro-pe-semana" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()">
+                            <option value="">Todas Semanas</option>
+                        </select>
+                        <select id="filtro-pe-bairro" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()">
+                            <option value="">Todos Bairros</option>
+                        </select>
+                        <select id="filtro-pe-agente" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()">
+                            <option value="">Todos Agentes</option>
+                        </select>
                     </div>
                 </div>
                 <div class="card stat-card bg-white p-4 border-start border-danger border-4">
@@ -414,14 +424,17 @@
                                             <td class="fw-bold text-dark"><i class="fa-solid fa-user text-muted me-2"></i> {{ agente.nome }}</td>
                                             <td class="text-secondary">{{ agente.user.username }}</td>
                                             <td class="text-end">
+                                                
                                                 <button type="button" class="btn btn-sm btn-outline-primary me-1" data-bs-toggle="modal" data-bs-target="#editModal{{ agente.id }}">
                                                     <i class="fa-solid fa-pen"></i>
                                                 </button>
+
                                                 <form method="POST" class="d-inline" onsubmit="return confirm('Excluir {{ agente.nome }}?');">
                                                     {% csrf_token %}
                                                     <input type="hidden" name="acao" value="excluir"><input type="hidden" name="agente_id" value="{{ agente.id }}">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger"><i class="fa-solid fa-trash-can"></i></button>
                                                 </form>
+
                                             </td>
                                         </tr>
                                         {% empty %}
@@ -507,7 +520,16 @@
             var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
             var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' });
 
-            map = L.map('map', { center: [-10.0116, -51.1186], zoom: 13, layers: [googleStreets] });
+            // INICIALIZAÇÃO DO MAPA COM ZOOM SUAVE
+            map = L.map('map', { 
+                center: [-10.0116, -51.1186], 
+                zoom: 13, 
+                layers: [googleStreets],
+                zoomSnap: 0.25,
+                zoomDelta: 0.5,
+                wheelPxPerZoomLevel: 120 
+            });
+            
             var baseMaps = { "Google Ruas (Padrão)": googleStreets, "Google Satélite (Puro)": googleSat, "Google Satélite + Nomes": googleHybrid, "OpenStreetMap": osmLayer };
             L.control.layers(baseMaps).addTo(map);
 
@@ -522,7 +544,17 @@
                             if(!mapZoonose) {
                                 var gS = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
                                 var gSat = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
-                                mapZoonose = L.map('map-zoonose', { center: [-10.0116, -51.1186], zoom: 13, layers: [gS] });
+                                
+                                // INICIALIZAÇÃO DO MAPA ZOONOSE COM ZOOM SUAVE
+                                mapZoonose = L.map('map-zoonose', { 
+                                    center: [-10.0116, -51.1186], 
+                                    zoom: 13, 
+                                    layers: [gS],
+                                    zoomSnap: 0.25,
+                                    zoomDelta: 0.5,
+                                    wheelPxPerZoomLevel: 120 
+                                });
+                                
                                 L.control.layers({"Google Ruas": gS, "Google Satélite": gSat}).addTo(mapZoonose);
 
                                 vacinacoesDB.forEach(v => {
