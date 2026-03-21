@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -57,7 +58,7 @@
 
     <div class="sidebar d-flex flex-column">
         <div class="sidebar-header">
-            <i class="fa-solid fa-mosquito fa-3x mb-2 text-warning"></i>
+            <img src="{% static 'img/logo.png' %}" alt="Logo" class="mb-2" style="width: 80px; height: auto;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2822/2822361.png'; this.style.filter='invert(85%) sepia(50%) saturate(1000%) hue-rotate(360deg)';">
             <h4>SisEndemias</h4>
             <small class="text-light opacity-75">Vila Rica - MT</small>
         </div>
@@ -101,12 +102,13 @@
                         <span class="badge bg-primary fs-6 p-2"><i class="fa-regular fa-clock me-1"></i><span id="relogio-top">Carregando...</span></span>
                     </div>
                 </div>
+                
                 <div class="row g-4 mb-4">
                     <div class="col-md-4">
                         <div class="card stat-card bg-white h-100 p-3 border-start border-primary border-4">
                             <div class="d-flex align-items-center">
                                 <div class="icon-box bg-primary shadow-sm"><i class="fa-solid fa-house-circle-check"></i></div>
-                                <div class="ms-3"><h6 class="text-muted mb-0">Total de Visitas Realizadas</h6><h3 class="fw-bold mb-0 text-dark" id="card-total-visitas">{{ total_visitas }}</h3></div>
+                                <div class="ms-3"><h6 class="text-muted mb-0">Total de Visitas</h6><h3 class="fw-bold mb-0 text-dark" id="card-total-visitas">{{ total_visitas }}</h3></div>
                             </div>
                         </div>
                     </div>
@@ -114,7 +116,7 @@
                         <div class="card stat-card bg-white h-100 p-3 border-start border-danger border-4">
                             <div class="d-flex align-items-center">
                                 <div class="icon-box bg-danger shadow-sm"><i class="fa-solid fa-biohazard"></i></div>
-                                <div class="ms-3"><h6 class="text-muted mb-0">Focos de Dengue (Com Coleta)</h6><h3 class="fw-bold mb-0 text-dark" id="card-total-focos">{{ focos_dengue }}</h3></div>
+                                <div class="ms-3"><h6 class="text-muted mb-0">Focos de Dengue</h6><h3 class="fw-bold mb-0 text-dark" id="card-total-focos">{{ focos_dengue }}</h3></div>
                             </div>
                         </div>
                     </div>
@@ -130,7 +132,7 @@
 
                 <div class="card stat-card bg-white p-3 mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-map-location-dot me-2"></i> Mapa de Visitas (Varredura)</h5>
+                        <h5 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-map-location-dot me-2"></i> Mapa e Dados Consolidados</h5>
                         <div class="d-flex gap-2">
                             <select id="map-semana" class="form-select form-select-sm border border-secondary fw-bold" style="width: 150px;" onchange="renderMapaJS()">
                                 <option value="">Todas Semanas</option>
@@ -154,15 +156,9 @@
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                     <h2 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-house-chimney-medical me-2"></i> Inspeções de Rotina</h2>
                     <div class="d-flex gap-2 flex-wrap">
-                        <select id="filtro-rotina-semana" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()">
-                            <option value="">Todas Semanas</option>
-                        </select>
-                        <select id="filtro-rotina-bairro" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()">
-                            <option value="">Todos Bairros</option>
-                        </select>
-                        <select id="filtro-rotina-agente" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()">
-                            <option value="">Todos Agentes</option>
-                        </select>
+                        <select id="filtro-rotina-semana" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()"><option value="">Todas Semanas</option></select>
+                        <select id="filtro-rotina-bairro" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()"><option value="">Todos Bairros</option></select>
+                        <select id="filtro-rotina-agente" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaRotinaJS()"><option value="">Todos Agentes</option></select>
                     </div>
                 </div>
                 <div class="card stat-card bg-white p-4">
@@ -179,15 +175,9 @@
                 <div class="d-flex justify-content-between align-items-center flex-wrap gap-3 mb-4">
                     <h2 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-industry me-2 text-danger"></i> Pontos Estratégicos (P.E.)</h2>
                     <div class="d-flex gap-2 flex-wrap">
-                        <select id="filtro-pe-semana" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()">
-                            <option value="">Todas Semanas</option>
-                        </select>
-                        <select id="filtro-pe-bairro" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()">
-                            <option value="">Todos Bairros</option>
-                        </select>
-                        <select id="filtro-pe-agente" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()">
-                            <option value="">Todos Agentes</option>
-                        </select>
+                        <select id="filtro-pe-semana" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()"><option value="">Todas Semanas</option></select>
+                        <select id="filtro-pe-bairro" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()"><option value="">Todos Bairros</option></select>
+                        <select id="filtro-pe-agente" class="form-select form-select-sm border-secondary fw-bold text-dark" style="width: auto;" onchange="renderTabelaPEJS()"><option value="">Todos Agentes</option></select>
                     </div>
                 </div>
                 <div class="card stat-card bg-white p-4 border-start border-danger border-4">
@@ -323,6 +313,10 @@
 
                 <div class="card stat-card bg-white p-3 mb-4">
                     <h5 class="fw-bold text-secondary mb-3"><i class="fa-solid fa-map-location-dot me-2"></i> Mapa de Vacinações Realizadas</h5>
+                    <div class="mb-2 small text-muted">
+                        <i class="fa-solid fa-location-dot" style="color: #8D6E63;"></i> Cães/Gatos Vacinados | 
+                        <i class="fa-solid fa-layer-group text-primary ms-2"></i> <b>Use o ícone de camadas no mapa para ver em Satélite</b>
+                    </div>
                     <div id="map-zoonose"></div>
                 </div>
                 
@@ -334,14 +328,14 @@
                             <tbody>
                                 {% for vacina in todas_vacinacoes %}
                                 <tr>
-                                    <td>{{ vacina.data_vacinacao|date:"d/m/Y H:i" }}</td>
-                                    <td>{{ vacina.agente.nome|default:"-" }}</td>
+                                    <td class="text-secondary fw-bold">{{ vacina.data_vacinacao|date:"d/m/Y H:i" }}</td>
+                                    <td><i class="fa-solid fa-user-check text-success me-2"></i>{{ vacina.agente.nome|default:"-" }}</td>
                                     <td><strong>{{ vacina.localidade }}</strong></td>
-                                    <td class="text-center"><span class="badge rounded-pill" style="background-color: #8D6E63;">{{ vacina.caes_vacinados }}</span></td>
-                                    <td class="text-center"><span class="badge rounded-pill" style="background-color: #FFB74D;">{{ vacina.gatos_vacinados }}</span></td>
+                                    <td class="text-center"><span class="badge rounded-pill fs-6" style="background-color: #8D6E63;"><i class="fa-solid fa-dog"></i> {{ vacina.caes_vacinados }}</span></td>
+                                    <td class="text-center"><span class="badge rounded-pill fs-6" style="background-color: #FFB74D;"><i class="fa-solid fa-cat"></i> {{ vacina.gatos_vacinados }}</span></td>
                                 </tr>
                                 {% empty %}
-                                <tr><td colspan="5" class="text-center py-5">Nenhum registro encontrado.</td></tr>
+                                <tr><td colspan="5" class="text-center text-muted py-5"><i class="fa-solid fa-syringe fa-3x mb-3 text-light"></i><br><h5>Nenhum registro de vacinação encontrado.</h5></td></tr>
                                 {% endfor %}
                             </tbody>
                         </table>
@@ -352,15 +346,41 @@
             <div class="tab-pane fade" id="conteudo-rel-zoonose" role="tabpanel">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h2 class="fw-bold text-secondary"><i class="fa-solid fa-file-invoice me-2" style="color: #8D6E63;"></i> Relatório de Vacinação Antirrábica</h2>
+                    <button class="btn btn-outline-primary" onclick="window.print()"><i class="fa-solid fa-print me-2"></i> Imprimir Relatório</button>
                 </div>
+                
                 <div class="caixa-filtro mb-4">
+                    <label class="text-muted small ms-2">Filtrar por Agente</label>
                     <select id="rel-zoo-agente" class="form-select mb-4 border-0 py-3 text-dark fw-bold">
                         <option value="">Todos os Agentes (Visão Geral)</option>
                     </select>
-                    <button class="btn-calcular w-100 py-3" onclick="gerarRelatorioZoonoseJS()" style="background-color: #8D6E63;">Gerar Relatório de Vacinação</button>
+                    <button class="btn-calcular w-100 py-3" onclick="gerarRelatorioZoonoseJS()" style="background-color: #8D6E63;">
+                        <i class="fa-solid fa-calculator me-2"></i> Gerar Relatório de Vacinação
+                    </button>
                 </div>
+
                 <div id="resultado-relatorio-zoonose" style="display: none;">
-                    <div id="lista-agentes-zoonose"></div>
+                    <div class="titulo-relatorio mb-4" style="background-color: #FFECB3;">
+                        Vila Rica - MT | Campanha de Vacinação Antirrábica<br>
+                        Filtro de Agente: <span id="lbl-zoo-agente" class="text-danger"></span>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 col-lg-6">
+                            <div class="card-relatorio border border-warning">
+                                <h5>Balanço de Animais Vacinados</h5>
+                                <div class="linha-rel"><span><i class="fa-solid fa-dog" style="color: #8D6E63;"></i> Cães Vacinados</span><span class="valor text-dark fs-5" id="r-zoo-caes">0</span></div>
+                                <div class="linha-rel"><span><i class="fa-solid fa-cat" style="color: #FFB74D;"></i> Gatos Vacinados</span><span class="valor text-dark fs-5" id="r-zoo-gatos">0</span></div>
+                                <div class="linha-rel total mt-3 pt-3 border-top"><span>TOTAL DE ANIMAIS</span><span class="valor fs-4 text-success" id="r-zoo-total">0</span></div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-lg-6">
+                            <div class="card-relatorio border border-warning">
+                                <h5>Produtividade por Agente (Animais)</h5>
+                                <div id="lista-agentes-zoonose"></div>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -378,7 +398,7 @@
                                 <div class="mb-3"><label class="form-label text-muted fw-bold">Nome Completo</label><input type="text" name="nome" class="form-control bg-light" required></div>
                                 <div class="mb-3"><label class="form-label text-muted fw-bold">Login do App</label><input type="text" name="username" class="form-control bg-light" required></div>
                                 <div class="mb-4"><label class="form-label text-muted fw-bold">Senha Inicial</label><input type="password" name="senha" class="form-control bg-light" required></div>
-                                <button type="submit" class="btn btn-primary w-100 fw-bold py-2">Salvar Agente</button>
+                                <button type="submit" class="btn btn-primary w-100 fw-bold py-2"><i class="fa-solid fa-check me-2"></i> Salvar Agente</button>
                             </form>
                         </div>
                     </div>
@@ -404,6 +424,8 @@
                                                 </form>
                                             </td>
                                         </tr>
+                                        {% empty %}
+                                        <tr><td colspan="3" class="text-center text-muted py-4">Nenhum agente cadastrado.</td></tr>
                                         {% endfor %}
                                     </tbody>
                                 </table>
@@ -439,12 +461,12 @@
                         </div>
                         <div class="mb-3">
                             <label class="form-label text-muted fw-bold">Nova Senha</label>
-                            <input type="password" name="senha" class="form-control" placeholder="Deixe em branco para manter a atual">
+                            <input type="password" name="senha" class="form-control" placeholder="Deixe em branco para não alterar">
                         </div>
                     </div>
                     <div class="modal-footer">
                         <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                        <button type="submit" class="btn btn-primary">Salvar Alterações</button>
+                        <button type="submit" class="btn btn-primary"><i class="fa-solid fa-save me-2"></i> Salvar</button>
                     </div>
                 </form>
             </div>
@@ -468,6 +490,9 @@
         const iconeFechada = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-grey.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
         const iconeZoonose = L.icon({ iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-gold.png', shadowUrl: 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/0.7.7/images/marker-shadow.png', iconSize: [25, 41], iconAnchor: [12, 41], popupAnchor: [1, -34], shadowSize: [41, 41] });
 
+        // ==========================================
+        // RELÓGIO EM TEMPO REAL
+        // ==========================================
         function atualizarRelogio() {
             const agora = new Date();
             document.getElementById('relogio-top').innerText = agora.toLocaleString('pt-BR', { timeZone: 'America/Cuiaba' });
@@ -476,58 +501,77 @@
         atualizarRelogio(); 
 
         document.addEventListener('DOMContentLoaded', function() {
+            
             var googleStreets = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
             var googleSat = L.tileLayer('http://{s}.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
+            var googleHybrid = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
             var osmLayer = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; OpenStreetMap' });
 
             map = L.map('map', { center: [-10.0116, -51.1186], zoom: 13, layers: [googleStreets] });
-            var baseMaps = { "Ruas": googleStreets, "Satélite": googleSat, "OpenStreet": osmLayer };
+            var baseMaps = { "Google Ruas (Padrão)": googleStreets, "Google Satélite (Puro)": googleSat, "Google Satélite + Nomes": googleHybrid, "OpenStreetMap": osmLayer };
             L.control.layers(baseMaps).addTo(map);
 
-            // MANIPULADOR DE ABAS (MAPA ZOONOSE)
             var triggerTabList = [].slice.call(document.querySelectorAll('#menu-tabs button'))
             triggerTabList.forEach(function (triggerEl) {
                 var tabTrigger = new bootstrap.Tab(triggerEl)
                 triggerEl.addEventListener('shown.bs.tab', function (event) { 
                     if(event.target.id === 'tab-dashboard'){ setTimeout(function(){ map.invalidateSize(); }, 100); } 
+                    
                     if(event.target.id === 'tab-zoonose'){ 
                         setTimeout(function(){ 
                             if(!mapZoonose) {
-                                mapZoonose = L.map('map-zoonose', { center: [-10.0116, -51.1186], zoom: 13, layers: [L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'] })] });
+                                var gS = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
+                                var gSat = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
+                                mapZoonose = L.map('map-zoonose', { center: [-10.0116, -51.1186], zoom: 13, layers: [gS] });
+                                L.control.layers({"Google Ruas": gS, "Google Satélite": gSat}).addTo(mapZoonose);
+
                                 vacinacoesDB.forEach(v => {
-                                    if(v.lat && v.lng) L.marker([v.lat, v.lng], {icon: iconeZoonose}).bindPopup(`<b>${v.localidade}</b><br>🐶 Cães: ${v.caes}<br>🐱 Gatos: ${v.gatos}`).addTo(mapZoonose);
+                                    if(v.lat && v.lng) {
+                                        let desc = `<b>📌 ${v.localidade}</b><br>Agente: ${v.agente}<br>🐶 Cães: ${v.caes}<br>🐱 Gatos: ${v.gatos}<br><small>Data: ${v.data_vacinacao}</small>`;
+                                        L.marker([v.lat, v.lng], {icon: iconeZoonose}).bindPopup(desc).addTo(mapZoonose);
+                                    }
                                 });
-                            } else { mapZoonose.invalidateSize(); }
+                            } else {
+                                mapZoonose.invalidateSize();
+                            }
                         }, 100); 
                     }
                 })
             });
 
-            // PREENCHER FILTROS DINAMICAMENTE
+            // PREENCHIMENTO DOS FILTROS
+            const selectRelSemana = document.getElementById('rel-semana');
+            const selectHistSemana = document.getElementById('hist-semana');
+            const selectMapSemana = document.getElementById('map-semana');
+            const selectRotinaSemana = document.getElementById('filtro-rotina-semana');
+            const selectPESemana = document.getElementById('filtro-pe-semana');
+            
             for(let i=1; i<=52; i++) {
-                let sNum = i.toString();
-                document.getElementById('rel-semana').appendChild(new Option(`Semana ${i}`, sNum));
-                document.getElementById('hist-semana').appendChild(new Option(`Semana ${i}`, sNum));
-                document.getElementById('map-semana').appendChild(new Option(`Semana ${i}`, sNum));
-                document.getElementById('filtro-rotina-semana').appendChild(new Option(`Semana ${i}`, sNum));
-                document.getElementById('filtro-pe-semana').appendChild(new Option(`Semana ${i}`, sNum));
+                let sNum = i.toString(); let txt = `Semana ${i}`;
+                selectRelSemana.appendChild(new Option(txt, sNum)); selectHistSemana.appendChild(new Option(txt, sNum)); selectMapSemana.appendChild(new Option(txt, sNum)); selectRotinaSemana.appendChild(new Option(txt, sNum)); selectPESemana.appendChild(new Option(txt, sNum));
             }
 
             let agentesUnicos = [...new Set(visitasDB.map(v => v.agente))].filter(n => n && n !== "Sem Agente").sort();
+            const selectMapAgente = document.getElementById('map-agente'); 
+            const selectRotinaAgente = document.getElementById('filtro-rotina-agente'); 
+            const selectPEAgente = document.getElementById('filtro-pe-agente');
+            
             agentesUnicos.forEach(ag => { 
-                document.getElementById('map-agente').appendChild(new Option(ag, ag)); 
-                document.getElementById('filtro-rotina-agente').appendChild(new Option(ag, ag)); 
-                document.getElementById('filtro-pe-agente').appendChild(new Option(ag, ag)); 
+                selectMapAgente.appendChild(new Option(ag, ag)); 
+                selectRotinaAgente.appendChild(new Option(ag, ag)); 
+                selectPEAgente.appendChild(new Option(ag, ag)); 
             });
 
             let bairrosUnicos = [...new Set(visitasDB.map(v => v.bairro))].filter(n => n && n !== "Sem Bairro").sort();
-            bairrosUnicos.forEach(b => { 
-                document.getElementById('filtro-rotina-bairro').appendChild(new Option(b, b)); 
-                document.getElementById('filtro-pe-bairro').appendChild(new Option(b, b)); 
-            });
+            const selectRotinaBairro = document.getElementById('filtro-rotina-bairro'); const selectPEBairro = document.getElementById('filtro-pe-bairro');
+            bairrosUnicos.forEach(b => { selectRotinaBairro.appendChild(new Option(b, b)); selectPEBairro.appendChild(new Option(b, b)); });
 
+            // FILTROS NOVO RELATÓRIO ZOONOSE
+            const selectRelZooAgente = document.getElementById('rel-zoo-agente');
             let agentesZooUnicos = [...new Set(vacinacoesDB.map(v => v.agente))].filter(n => n && n !== "Sem Agente").sort();
-            agentesZooUnicos.forEach(ag => { document.getElementById('rel-zoo-agente').appendChild(new Option(ag, ag)); });
+            agentesZooUnicos.forEach(ag => {
+                selectRelZooAgente.appendChild(new Option(ag, ag));
+            });
 
             renderHistoricoJS();
             renderMapaJS();
@@ -536,182 +580,187 @@
         });
 
         // ==========================================
-        // FILTROS UNIFICADOS (MAPA + CARDS)
+        // AUTO-ATUALIZAÇÃO INVISÍVEL
+        // ==========================================
+        setInterval(function() {
+            fetch(window.location.href)
+            .then(res => res.text())
+            .then(html => {
+                const doc = new DOMParser().parseFromString(html, 'text/html');
+                const filtroSemana = document.getElementById('map-semana').value;
+                const filtroAgente = document.getElementById('map-agente').value;
+                
+                // Só atualiza os números sozinho se não tiver nenhum filtro selecionado
+                if (filtroSemana === "" && filtroAgente === "") {
+                    document.getElementById('card-total-visitas').innerText = doc.getElementById('card-total-visitas').innerText;
+                    document.getElementById('card-total-focos').innerText = doc.getElementById('card-total-focos').innerText;
+                }
+            })
+            .catch(err => console.log("Erro na auto-atualização", err));
+        }, 60000); 
+
+        // ==========================================
+        // MAPA E CARTÕES SUPERIORES (Sincronizados)
         // ==========================================
         function renderMapaJS() {
             if(markerLayer) { map.removeLayer(markerLayer); } 
             markerLayer = L.layerGroup().addTo(map);
+            
             const sem = document.getElementById('map-semana').value; 
             const ag = document.getElementById('map-agente').value;
             
-            let contadorV = 0; let contadorF = 0;
+            let contadorVisitas = 0;
+            let contadorFocos = 0;
 
             visitasDB.forEach(v => {
-                if ((sem !== "" && v.semana !== sem) || (ag !== "" && v.agente !== ag)) return;
+                // Filtra tanto para o mapa quanto para os cartões
+                if (sem !== "" && v.semana !== sem) return; 
+                if (ag !== "" && v.agente !== ag) return;
                 
-                contadorV++; 
-                if (v.tubitos > 0) contadorF++;
+                // Atualiza a contagem dos cartões
+                contadorVisitas++;
+                if (v.tubitos > 0) { contadorFocos++; }
 
+                // Pinta no mapa
                 if(v.lat && v.lng) {
-                    let icone = iconeNormal;
-                    if (v.tubitos > 0) icone = iconeFoco;
-                    else if (v.status === 'F' || v.status === 'R') icone = iconeFechada;
-                    L.marker([v.lat, v.lng], {icon: icone}).bindPopup(`<b>Agente: ${v.agente}</b><br>${v.endereco}`).addTo(markerLayer);
+                    let icone = iconeNormal; let txtStatus = 'Normal (Inspecionado)';
+                    if (v.tubitos > 0) { icone = iconeFoco; txtStatus = 'Foco de Dengue!'; } else if (v.status === 'F' || v.status === 'R') { icone = iconeFechada; txtStatus = v.status === 'F' ? 'Fechada' : 'Recusada'; }
+                    let desc = `<b>${txtStatus}</b><br>Nº ${v.numero} - ${v.endereco}<br>Agente: ${v.agente}<br>Tubitos: ${v.tubitos}<br><small>Data: ${v.data_visita}</small>`;
+                    L.marker([v.lat, v.lng], {icon: icone}).bindPopup(desc).addTo(markerLayer);
                 }
             });
 
-            document.getElementById('card-total-visitas').innerText = contadorV;
-            document.getElementById('card-total-focos').innerText = contadorF;
+            // Atualiza os números nos cartões azuis e vermelhos instantaneamente
+            document.getElementById('card-total-visitas').innerText = contadorVisitas;
+            document.getElementById('card-total-focos').innerText = contadorFocos;
         }
 
         // ==========================================
-        // TABELAS COM FORMATAÇÃO ORIGINAL
+        // GERADOR DE RELATÓRIO DE ZOONOSE
+        // ==========================================
+        function gerarRelatorioZoonoseJS() {
+            const ag = document.getElementById('rel-zoo-agente').value;
+            let filtradas = vacinacoesDB;
+
+            if (ag !== "") {
+                filtradas = filtradas.filter(v => v.agente === ag);
+            }
+
+            let contCaes = 0;
+            let contGatos = 0;
+            let agentesZoo = {};
+
+            filtradas.forEach(v => {
+                contCaes += v.caes;
+                contGatos += v.gatos;
+                if(!agentesZoo[v.agente]) agentesZoo[v.agente] = { caes: 0, gatos: 0 };
+                agentesZoo[v.agente].caes += v.caes;
+                agentesZoo[v.agente].gatos += v.gatos;
+            });
+
+            document.getElementById('lbl-zoo-agente').innerText = ag === "" ? "TODOS OS AGENTES" : ag.toUpperCase();
+            document.getElementById('r-zoo-caes').innerText = contCaes;
+            document.getElementById('r-zoo-gatos').innerText = contGatos;
+            document.getElementById('r-zoo-total').innerText = contCaes + contGatos;
+
+            const divAgentes = document.getElementById('lista-agentes-zoonose');
+            divAgentes.innerHTML = '';
+            let temAgente = false;
+            for (const [nome, qtd] of Object.entries(agentesZoo)) {
+                temAgente = true;
+                let tot = qtd.caes + qtd.gatos;
+                divAgentes.innerHTML += `<div class="linha-rel"><span><i class="fa-solid fa-user text-muted me-1"></i> ${nome}</span><span class="badge rounded-pill bg-secondary">${tot} Animais Vacinados</span></div>`;
+            }
+            if (!temAgente) divAgentes.innerHTML = '<div class="text-muted py-2"><small>Nenhum registro encontrado neste filtro.</small></div>';
+
+            document.getElementById('resultado-relatorio-zoonose').style.display = 'block';
+        }
+
+        // ==========================================
+        // FUNÇÕES ANTIGAS PNCD
         // ==========================================
         function renderTabelaRotinaJS() {
-            const tbody = document.getElementById('tbody-rotina');
-            const sem = document.getElementById('filtro-rotina-semana').value;
-            const bairro = document.getElementById('filtro-rotina-bairro').value;
-            const ag = document.getElementById('filtro-rotina-agente').value;
+            const tbody = document.getElementById('tbody-rotina'); const sem = document.getElementById('filtro-rotina-semana').value; const bairro = document.getElementById('filtro-rotina-bairro').value; const ag = document.getElementById('filtro-rotina-agente').value;
             let filtradas = visitasDB.filter(v => v.tipo !== 'PE');
-            if (sem !== "") filtradas = filtradas.filter(v => v.semana === sem);
-            if (bairro !== "") filtradas = filtradas.filter(v => v.bairro === bairro);
-            if (ag !== "") filtradas = filtradas.filter(v => v.agente === ag);
-
+            if (sem !== "") filtradas = filtradas.filter(v => v.semana === sem); if (bairro !== "") filtradas = filtradas.filter(v => v.bairro === bairro); if (ag !== "") filtradas = filtradas.filter(v => v.agente === ag);
             let html = '';
-            filtradas.forEach(v => {
-                let badgeStatus = v.status === 'N' ? '<span class="badge bg-success">Normal</span>' : (v.status === 'F' ? '<span class="badge bg-warning text-dark">Fechada</span>' : '<span class="badge bg-danger">Recusada</span>');
-                let badgeTubitos = v.tubitos > 0 ? `<span class="badge bg-danger rounded-pill"><i class="fa-solid fa-vial-virus"></i> ${v.tubitos}</span>` : `<span class="badge bg-light text-dark border">0</span>`;
-                html += `<tr><td>${v.data_visita}</td><td>${v.agente}</td><td><strong>${v.endereco}</strong>, Nº ${v.numero}</td><td>${v.bairro}</td><td>${badgeStatus}</td><td class="text-center">${badgeTubitos}</td></tr>`;
-            });
-            tbody.innerHTML = html || '<tr><td colspan="6" class="text-center py-5">Nenhum registro encontrado.</td></tr>';
+            if (filtradas.length === 0) { html = `<tr><td colspan="6" class="text-center text-muted py-5"><i class="fa-solid fa-clipboard-check fa-3x mb-3 text-light"></i><br><h5>Nenhuma visita de rotina encontrada para este filtro.</h5></td></tr>`; } else {
+                filtradas.forEach(v => { let badgeStatus = v.status === 'N' ? '<span class="badge bg-success">Normal</span>' : (v.status === 'F' ? '<span class="badge bg-warning text-dark">Fechada</span>' : '<span class="badge bg-danger">Recusada</span>'); let badgeTubitos = v.tubitos > 0 ? `<span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> ${v.tubitos}</span>` : `<span class="badge bg-light text-dark border fs-6">0</span>`; html += `<tr><td class="text-secondary fw-bold">${v.data_visita}</td><td><i class="fa-solid fa-user-check text-success me-2"></i>${v.agente}</td><td><strong>${v.endereco}</strong>, Nº ${v.numero}<br><small class="text-muted">Quadra: ${v.quarteirao}</small></td><td>${v.bairro}</td><td>${badgeStatus}</td><td class="text-center">${badgeTubitos}</td></tr>`; });
+            }
+            tbody.innerHTML = html;
         }
 
         function renderTabelaPEJS() {
-            const tbody = document.getElementById('tbody-pe');
-            const sem = document.getElementById('filtro-pe-semana').value;
-            const bairro = document.getElementById('filtro-pe-bairro').value;
-            const ag = document.getElementById('filtro-pe-agente').value;
+            const tbody = document.getElementById('tbody-pe'); const sem = document.getElementById('filtro-pe-semana').value; const bairro = document.getElementById('filtro-pe-bairro').value; const ag = document.getElementById('filtro-pe-agente').value;
             let filtradas = visitasDB.filter(v => v.tipo === 'PE');
-            if (sem !== "") filtradas = filtradas.filter(v => v.semana === sem);
-            if (bairro !== "") filtradas = filtradas.filter(v => v.bairro === bairro);
-            if (ag !== "") filtradas = filtradas.filter(v => v.agente === ag);
-
+            if (sem !== "") filtradas = filtradas.filter(v => v.semana === sem); if (bairro !== "") filtradas = filtradas.filter(v => v.bairro === bairro); if (ag !== "") filtradas = filtradas.filter(v => v.agente === ag);
             let html = '';
-            filtradas.forEach(v => {
-                let badgeStatus = v.status === 'N' ? '<span class="badge bg-success">Normal</span>' : (v.status === 'F' ? '<span class="badge bg-warning text-dark">Fechada</span>' : '<span class="badge bg-danger">Recusada</span>');
-                let badgeTubitos = v.tubitos > 0 ? `<span class="badge bg-danger rounded-pill"><i class="fa-solid fa-vial-virus"></i> ${v.tubitos}</span>` : `<span class="badge bg-light text-dark border">0</span>`;
-                html += `<tr><td>${v.data_visita}</td><td>${v.agente}</td><td><strong>${v.endereco}</strong>, Nº ${v.numero}</td><td>${v.bairro}</td><td>${badgeStatus}</td><td class="text-center">${badgeTubitos}</td></tr>`;
-            });
-            tbody.innerHTML = html || '<tr><td colspan="6" class="text-center py-5">Nenhum registro encontrado.</td></tr>';
+            if (filtradas.length === 0) { html = `<tr><td colspan="6" class="text-center text-muted py-5"><i class="fa-solid fa-industry fa-3x mb-3 text-light"></i><br><h5>Nenhuma visita a Ponto Estratégico encontrada.</h5></td></tr>`; } else {
+                filtradas.forEach(v => { let badgeStatus = v.status === 'N' ? '<span class="badge bg-success">Normal</span>' : (v.status === 'F' ? '<span class="badge bg-warning text-dark">Fechada</span>' : '<span class="badge bg-danger">Recusada</span>'); let badgeTubitos = v.tubitos > 0 ? `<span class="badge bg-danger rounded-pill fs-6"><i class="fa-solid fa-vial-virus"></i> ${v.tubitos}</span>` : `<span class="badge bg-light text-dark border fs-6">0</span>`; html += `<tr><td class="text-secondary fw-bold">${v.data_visita}</td><td><i class="fa-solid fa-user-check text-danger me-2"></i>${v.agente}</td><td><strong>${v.endereco}</strong>, Nº ${v.numero}<br><small class="text-muted">Quadra: ${v.quarteirao}</small></td><td>${v.bairro}</td><td>${badgeStatus}</td><td class="text-center">${badgeTubitos}</td></tr>`; });
+            }
+            tbody.innerHTML = html;
         }
 
-        // ==========================================
-        // HISTÓRICO AGRUPADO (LÓGICA COMPLETA)
-        // ==========================================
         function renderHistoricoJS() {
-            const semSel = document.getElementById('hist-semana').value;
-            const container = document.getElementById('resultado-historico');
-            let filtradas = semSel !== "" ? visitasDB.filter(v => v.semana === semSel) : visitasDB;
-            if (filtradas.length === 0) { container.innerHTML = '<p class="text-center py-5">Sem dados para este filtro.</p>'; return; }
-
+            const semanaSelecionada = document.getElementById('hist-semana').value; const container = document.getElementById('resultado-historico');
+            let filtradas = visitasDB; if (semanaSelecionada !== "") { filtradas = visitasDB.filter(v => v.semana === semanaSelecionada); }
+            if (filtradas.length === 0) { container.innerHTML = '<div class="text-center py-5 text-muted"><i class="fa-solid fa-folder-open fa-4x mb-3 text-light"></i><h5>Nenhum histórico encontrado para este filtro.</h5></div>'; return; }
             let agrupado = {};
             filtradas.forEach(v => {
-                let b = (v.bairro || "SEM BAIRRO").toUpperCase();
-                let q = (v.quarteirao || "S/Q").toString();
-                let rua = (v.endereco || "RUA NÃO INFORMADA").toUpperCase();
-                if (!agrupado[b]) agrupado[b] = { total: 0, quarteiroes: {} };
-                if (!agrupado[b].quarteiroes[q]) agrupado[b].quarteiroes[q] = {};
-                if (!agrupado[b].quarteiroes[q][rua]) agrupado[b].quarteiroes[q][rua] = [];
-                agrupado[b].total++;
-                agrupado[b].quarteiroes[q][rua].push(v);
+                let b = (v.bairro || "Sem Bairro").toUpperCase(); let q_raw = v.quarteirao || "S/Q"; let numQ = parseInt(q_raw); let q = !isNaN(numQ) ? numQ.toString().padStart(2, '0') : q_raw; let rua = (v.endereco || "Rua Não Informada").toUpperCase(); let num = v.numero || "S/N"; let imId = v.imovel || Math.random().toString(); let tipo = v.tipo || 'R';
+                if (!agrupado[b]) agrupado[b] = { total: 0, quarteiroes: {} }; agrupado[b].total++;
+                if (!agrupado[b].quarteiroes[q]) agrupado[b].quarteiroes[q] = {}; if (!agrupado[b].quarteiroes[q][rua]) agrupado[b].quarteiroes[q][rua] = {}; if (!agrupado[b].quarteiroes[q][rua][imId]) { agrupado[b].quarteiroes[q][rua][imId] = { numero: num, tipo: tipo, visitas: [] }; }
+                agrupado[b].quarteiroes[q][rua][imId].visitas.push(v);
             });
-
             let html = ''; let bId = 0;
             Object.keys(agrupado).sort().forEach(bairro => {
-                html += `<div class="bairro-header mt-4"><span>${bairro}</span><span class="bairro-badge">${agrupado[bairro].total} VISITAS</span></div>`;
-                let accId = `acc-${bId++}`;
-                html += `<div class="accordion shadow-sm" id="${accId}">`;
-                Object.keys(agrupado[bairro].quarteiroes).sort((a,b) => a-b).forEach((quart, qIdx) => {
-                    let itemId = `item-${bId}-${qIdx}`;
-                    html += `<div class="accordion-item"><h2 class="accordion-header"><button class="accordion-button collapsed fw-bold" type="button" data-bs-toggle="collapse" data-bs-target="#${itemId}"><i class="fa-solid fa-hashtag me-2 text-success"></i> Quarteirão ${quart}</button></h2><div id="${itemId}" class="accordion-collapse collapse" data-bs-parent="#${accId}"><div class="accordion-body">`;
-                    Object.keys(agrupado[bairro].quarteiroes[quart]).sort().forEach(rua => {
-                        html += `<div class="p-2 bg-light border-start border-3 border-primary mb-2"><strong><i class="fa-solid fa-map-pin me-2 text-danger"></i>${rua}</strong></div>`;
-                        agrupado[bairro].quarteiroes[quart][rua].forEach(v => {
-                            html += `<div class="d-flex justify-content-between border-bottom py-1 small"><span>Nº ${v.numero} - Agente: ${v.agente}</span><span class="text-muted">${v.data_visita}</span></div>`;
+                let dadosBairro = agrupado[bairro];
+                html += `<div class="bairro-header mt-4 mb-2"><span>${bairro}</span><span class="bairro-badge">${dadosBairro.total} VISITAS</span></div><div class="p-2 pt-3" style="background-color: #f8f9fa; border-radius: 0 0 8px 8px; margin-bottom: 20px;">`;
+                let accordionId = `acc-bairro-${bId++}`; html += `<div class="accordion" id="${accordionId}">`; let qId = 0;
+                Object.keys(dadosBairro.quarteiroes).sort((a,b) => { let nA = parseInt(a); let nB = parseInt(b); if(!isNaN(nA) && !isNaN(nB)) return nA - nB; return a.localeCompare(b); }).forEach(quart => {
+                    let ruas = dadosBairro.quarteiroes[quart]; let itemAccId = `col-${bId}-${qId++}`;
+                    html += `<div class="accordion-item border mb-3 shadow-sm rounded-4 overflow-hidden"><h2 class="accordion-header"><button class="accordion-button collapsed fw-bold py-3 px-4" type="button" data-bs-toggle="collapse" data-bs-target="#${itemAccId}" style="background-color: white; color: #1f2937;"><i class="fa-solid fa-hashtag fs-4 me-3" style="color: #4caf50;"></i><span style="font-size: 17px;">Quarteirão ${quart}</span></button></h2><div id="${itemAccId}" class="accordion-collapse collapse" data-bs-parent="#${accordionId}"><div class="accordion-body p-0 bg-light">`;
+                    Object.keys(ruas).sort().forEach(rua => {
+                        let imoveis = ruas[rua];
+                        html += `<div class="px-4 py-2 border-bottom border-top" style="background-color: #f1f5f9;"><i class="fa-solid fa-map-pin me-2" style="color: #e53935;"></i> <span class="fw-bold text-dark">${rua}</span></div>`;
+                        Object.keys(imoveis).forEach(imId => {
+                            let imovel = imoveis[imId]; let iconHome = imovel.tipo === 'PE' ? 'fa-industry' : 'fa-house';
+                            html += `<div class="card m-3 shadow-sm border rounded-4 overflow-hidden"><div class="card-body p-3"><div class="d-flex justify-content-between align-items-center mb-2"><div class="d-flex align-items-center"><div class="p-2 rounded bg-light me-3"><i class="fa-solid ${iconHome} fs-4" style="color: #1e88e5;"></i></div><div><h6 class="fw-bold mb-1 text-dark" style="font-size: 16px;">Nº ${imovel.numero} | Tipo: ${imovel.tipo}</h6><span class="text-muted small">Visitas: ${imovel.visitas.length}</span></div></div></div>`;
+                            imovel.visitas.forEach(v => {
+                                let txtStatus = v.status === 'N' ? 'N' : (v.status === 'F' ? 'F' : 'R'); let corIcon = v.status === 'N' ? '#4caf50' : '#e53935'; let iconStatus = v.status === 'N' ? 'fa-circle-check' : 'fa-circle-xmark';
+                                html += `<div class="mt-3 pt-3 border-top"><div class="d-flex justify-content-between align-items-center mb-2"><span class="fw-bold text-dark">Visita ID: ${v.id || 'Nova'} - Status: ${txtStatus}</span><i class="fa-solid ${iconStatus} fs-5" style="color: ${corIcon};"></i></div><div class="d-flex align-items-center text-muted small mb-1"><i class="fa-regular fa-calendar-days me-2 text-danger"></i> ${v.data_visita}</div><div class="text-muted small mb-1">Tubitos: ${v.tubitos}</div><div class="text-muted small"><i class="fa-solid fa-user-check me-1 text-success"></i> Agente: ${v.agente}</div></div>`;
+                            }); html += `</div></div>`;
                         });
-                    });
-                    html += `</div></div></div>`;
-                });
-                html += `</div>`;
+                    }); html += `</div></div></div>`;
+                }); html += `</div></div>`; 
             });
             container.innerHTML = html;
         }
 
-        // ==========================================
-        // GERADORES DE RELATÓRIO
-        // ==========================================
         function gerarFechamentoJS() {
-            const bairro = document.getElementById('rel-bairro').value;
-            const semana = document.getElementById('rel-semana').value;
-            const tipo = document.getElementById('rel-tipo').value;
-            if (!bairro || !semana) { alert('Atenção: Selecione o bairro e a semana!'); return; }
-            
-            let cont = { R:0, C:0, TB:0, PE:0, Outro:0, N:0, F:0, Rec:0, A1:0, A2:0, B:0, Cdep:0, D1:0, D2:0, E:0, tub:0, eli:0 };
-            let agProd = {};
-
+            const bairro = document.getElementById('rel-bairro').value; const semana = document.getElementById('rel-semana').value; const tipoRelatorio = document.getElementById('rel-tipo').value;
+            if (!bairro || !semana) { alert('Atenção: Selecione o Bairro e a Semana Epidemiológica para gerar o relatório!'); return; }
+            let contadores = { R: 0, C: 0, TB: 0, PE: 0, Outros: 0, N: 0, F: 0, Rec: 0, A1: 0, A2: 0, B: 0, C_dep: 0, D1: 0, D2: 0, E: 0, tubitos: 0, eliminados: 0 }; let agentes = {};
             visitasDB.forEach(v => {
                 if (v.bairro === bairro && v.semana === semana) {
-                    if (tipo === 'Apenas PE' && v.tipo !== 'PE') return;
-                    if(cont[v.tipo] !== undefined) cont[v.tipo]++; else if (v.tipo !== 'PE') cont.Outro++;
-                    if(v.status === 'N') cont.N++; else if(v.status === 'F') cont.F++; else if(v.status === 'R') cont.Rec++;
-                    cont.A1 += v.dep_A1 || 0; cont.A2 += v.dep_A2 || 0; cont.B += v.dep_B || 0; cont.Cdep += v.dep_C || 0; cont.D1 += v.dep_D1 || 0; cont.D2 += v.dep_D2 || 0; cont.E += v.dep_E || 0;
-                    cont.tub += v.tubitos || 0; cont.eli += v.eliminados || 0;
-                    if(!agProd[v.agente]) agProd[v.agente] = 0; agProd[v.agente]++;
+                    if (tipoRelatorio === 'Apenas PE' && v.tipo !== 'PE') return;
+                    if (v.tipo === 'R') contadores.R++; else if (v.tipo === 'C') contadores.C++; else if (v.tipo === 'TB') contadores.TB++; else if (v.tipo === 'PE') contadores.PE++; else contadores.Outros++;
+                    if (v.status === 'N') contadores.N++; else if (v.status === 'F') contadores.F++; else if (v.status === 'R') contadores.Rec++;
+                    contadores.A1 += v.dep_A1; contadores.A2 += v.dep_A2; contadores.B += v.dep_B; contadores.C_dep += v.dep_C; contadores.D1 += v.dep_D1; contadores.D2 += v.dep_D2; contadores.E += v.dep_E;
+                    contadores.tubitos += v.tubitos; contadores.eliminados += v.eliminados;
+                    if (!agentes[v.agente]) agentes[v.agente] = 0; agentes[v.agente]++;
                 }
             });
-
-            document.getElementById('lbl-bairro').innerText = bairro;
-            document.getElementById('lbl-semana').innerText = semana;
-            document.getElementById('lbl-tipo').innerText = tipo;
-            document.getElementById('r-R').innerText = cont.R; document.getElementById('r-C').innerText = cont.C; document.getElementById('r-TB').innerText = cont.TB; document.getElementById('r-PE').innerText = cont.PE; document.getElementById('r-Outro').innerText = cont.Outro;
-            document.getElementById('r-TotalImoveis').innerText = cont.R+cont.C+cont.TB+cont.PE+cont.Outro;
-            document.getElementById('r-N').innerText = cont.N; document.getElementById('r-F').innerText = cont.F; document.getElementById('r-Rec').innerText = cont.Rec;
-            document.getElementById('r-Tubitos').innerText = cont.tub; document.getElementById('r-Eliminados').innerText = cont.eli;
-            document.getElementById('r-A1').innerText = cont.A1; document.getElementById('r-A2').innerText = cont.A2; document.getElementById('r-B').innerText = cont.B; document.getElementById('r-Cdep').innerText = cont.Cdep; document.getElementById('r-D1').innerText = cont.D1; document.getElementById('r-D2').innerText = cont.D2; document.getElementById('r-E').innerText = cont.E;
-            document.getElementById('r-TotalDep').innerText = cont.A1+cont.A2+cont.B+cont.Cdep+cont.D1+cont.D2+cont.E;
-            
-            let htmlAg = '';
-            for(let [ag, qtd] of Object.entries(agProd)) { htmlAg += `<div class="linha-rel"><span><i class="fa-solid fa-user me-1 text-muted"></i> ${ag}</span><span class="valor text-primary">${qtd}</span></div>`; }
-            document.getElementById('lista-agentes').innerHTML = htmlAg || '<p class="small text-muted">Sem dados.</p>';
-            
+            document.getElementById('lbl-bairro').innerText = bairro; document.getElementById('lbl-semana').innerText = semana; document.getElementById('lbl-tipo').innerText = tipoRelatorio.toUpperCase();
+            document.getElementById('r-R').innerText = contadores.R; document.getElementById('r-C').innerText = contadores.C; document.getElementById('r-TB').innerText = contadores.TB; document.getElementById('r-PE').innerText = contadores.PE; document.getElementById('r-Outro').innerText = contadores.Outros; document.getElementById('r-TotalImoveis').innerText = (contadores.R + contadores.C + contadores.TB + contadores.PE + contadores.Outros);
+            document.getElementById('r-N').innerText = contadores.N; document.getElementById('r-F').innerText = contadores.F; document.getElementById('r-Rec').innerText = contadores.Rec;
+            document.getElementById('r-A1').innerText = contadores.A1; document.getElementById('r-A2').innerText = contadores.A2; document.getElementById('r-B').innerText = contadores.B; document.getElementById('r-Cdep').innerText = contadores.C_dep; document.getElementById('r-D1').innerText = contadores.D1; document.getElementById('r-D2').innerText = contadores.D2; document.getElementById('r-E').innerText = contadores.E; document.getElementById('r-TotalDep').innerText = (contadores.A1 + contadores.A2 + contadores.B + contadores.C_dep + contadores.D1 + contadores.D2 + contadores.E);
+            document.getElementById('r-Tubitos').innerText = contadores.tubitos; document.getElementById('r-Eliminados').innerText = contadores.eliminados;
+            const divAgentes = document.getElementById('lista-agentes'); divAgentes.innerHTML = ''; let temAgente = false;
+            for (const [nome, qtd] of Object.entries(agentes)) { temAgente = true; divAgentes.innerHTML += `<div class="linha-rel"><span><i class="fa-solid fa-user text-muted me-1"></i> ${nome}</span><span class="badge bg-primary rounded-pill">${qtd}</span></div>`; }
+            if (!temAgente) divAgentes.innerHTML = '<div class="text-muted py-2"><small>Nenhum agente registrou visitas neste filtro.</small></div>';
             document.getElementById('resultado-relatorio').style.display = 'block';
         }
-
-        function gerarRelatorioZoonoseJS() {
-            const ag = document.getElementById('rel-zoo-agente').value;
-            let c = 0; let g = 0; let agZ = {};
-            vacinacoesDB.forEach(v => {
-                if (ag === "" || v.agente === ag) { 
-                    c += v.caes; g += v.gatos; 
-                    if(!agZ[v.agente]) agZ[v.agente] = 0; agZ[v.agente] += (v.caes + v.gatos);
-                }
-            });
-            let html = `<div class="card stat-card p-3 mb-3 bg-light"><h6><i class="fa-solid fa-square-poll-vertical me-2"></i>Balanço Geral</h6>Cães: <b>${c}</b> | Gatos: <b>${g}</b><br>Total: <b class="text-success">${c+g}</b></div>`;
-            for(let [nome, qtd] of Object.entries(agZ)) { html += `<div class="linha-rel"><span><i class="fa-solid fa-user me-1 text-muted"></i> ${nome}</span><span class="badge rounded-pill bg-warning text-dark">${qtd} animais</span></div>`; }
-            document.getElementById('lista-agentes-zoonose').innerHTML = html;
-            document.getElementById('resultado-relatorio-zoonose').style.display = 'block';
-        }
-
-        // AUTO-UPDATE (APENAS SE NÃO TIVER FILTROS)
-        setInterval(function() {
-            fetch(window.location.href).then(res => res.text()).then(html => {
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                if (document.getElementById('map-semana').value === "" && document.getElementById('map-agente').value === "") {
-                    document.getElementById('card-total-visitas').innerText = doc.getElementById('card-total-visitas').innerText;
-                    document.getElementById('card-total-focos').innerText = doc.getElementById('card-total-focos').innerText;
-                }
-            });
-        }, 60000);
     </script>
 </body>
 </html>
