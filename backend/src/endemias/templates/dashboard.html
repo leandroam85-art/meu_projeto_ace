@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -57,7 +58,7 @@
 
     <div class="sidebar d-flex flex-column">
         <div class="sidebar-header">
-            <i class="fa-solid fa-mosquito fa-3x mb-2 text-warning"></i>
+            <img src="{% static 'img/logo.png' %}" alt="Logo" class="mb-2" style="width: 80px; height: auto;" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2822/2822361.png'; this.style.filter='invert(85%) sepia(50%) saturate(1000%) hue-rotate(360deg)';">
             <h4>SisEndemias</h4>
             <small class="text-light opacity-75">Vila Rica - MT</small>
         </div>
@@ -106,7 +107,7 @@
                         <div class="card stat-card bg-white h-100 p-3 border-start border-primary border-4">
                             <div class="d-flex align-items-center">
                                 <div class="icon-box bg-primary shadow-sm"><i class="fa-solid fa-house-circle-check"></i></div>
-                                <div class="ms-3"><h6 class="text-muted mb-0">Total de Visitas</h6><h3 class="fw-bold mb-0 text-dark" id="card-total-visitas">{{ total_visitas }}</h3></div>
+                                <div class="ms-3"><h6 class="text-muted mb-0">Total de Visitas Realizadas</h6><h3 class="fw-bold mb-0 text-dark" id="card-total-visitas">{{ total_visitas }}</h3></div>
                             </div>
                         </div>
                     </div>
@@ -114,7 +115,7 @@
                         <div class="card stat-card bg-white h-100 p-3 border-start border-danger border-4">
                             <div class="d-flex align-items-center">
                                 <div class="icon-box bg-danger shadow-sm"><i class="fa-solid fa-biohazard"></i></div>
-                                <div class="ms-3"><h6 class="text-muted mb-0">Focos de Dengue</h6><h3 class="fw-bold mb-0 text-dark" id="card-total-focos">{{ focos_dengue }}</h3></div>
+                                <div class="ms-3"><h6 class="text-muted mb-0">Focos de Dengue (Com Coleta)</h6><h3 class="fw-bold mb-0 text-dark" id="card-total-focos">{{ focos_dengue }}</h3></div>
                             </div>
                         </div>
                     </div>
@@ -130,7 +131,7 @@
 
                 <div class="card stat-card bg-white p-3 mb-4">
                     <div class="d-flex justify-content-between align-items-center mb-3">
-                        <h5 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-map-location-dot me-2"></i> Mapa e Dados Consolidados</h5>
+                        <h5 class="fw-bold text-secondary mb-0"><i class="fa-solid fa-map-location-dot me-2"></i> Mapa de Visitas (Varredura)</h5>
                         <div class="d-flex gap-2">
                             <select id="map-semana" class="form-select form-select-sm border border-secondary fw-bold" style="width: 150px;" onchange="renderMapaJS()">
                                 <option value="">Todas Semanas</option>
@@ -144,7 +145,7 @@
                         <i class="fa-solid fa-location-dot text-danger"></i> Foco | 
                         <i class="fa-solid fa-location-dot text-success"></i> Normal | 
                         <i class="fa-solid fa-location-dot text-secondary"></i> Fechada/Recusa |
-                        <i class="fa-solid fa-layer-group text-primary ms-2"></i> <b>Use o ícone de camadas no mapa para ver em Satélite</b>
+                        <i class="fa-solid fa-layer-group text-primary ms-2"></i> <b>Use o ícone de camadas para Satélite | Clique no ponto para abrir o Street View</b>
                     </div>
                     <div id="map"></div>
                 </div>
@@ -529,7 +530,6 @@
                 zoomDelta: 0.5,
                 wheelPxPerZoomLevel: 120 
             });
-            
             var baseMaps = { "Google Ruas (Padrão)": googleStreets, "Google Satélite (Puro)": googleSat, "Google Satélite + Nomes": googleHybrid, "OpenStreetMap": osmLayer };
             L.control.layers(baseMaps).addTo(map);
 
@@ -545,7 +545,7 @@
                                 var gS = L.tileLayer('http://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
                                 var gSat = L.tileLayer('http://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}', { maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3'], attribution: '&copy; Google' });
                                 
-                                // INICIALIZAÇÃO DO MAPA ZOONOSE COM ZOOM SUAVE
+                                // MAPA ZOONOSE TAMBÉM COM ZOOM SUAVE
                                 mapZoonose = L.map('map-zoonose', { 
                                     center: [-10.0116, -51.1186], 
                                     zoom: 13, 
@@ -554,12 +554,13 @@
                                     zoomDelta: 0.5,
                                     wheelPxPerZoomLevel: 120 
                                 });
-                                
                                 L.control.layers({"Google Ruas": gS, "Google Satélite": gSat}).addTo(mapZoonose);
 
                                 vacinacoesDB.forEach(v => {
                                     if(v.lat && v.lng) {
-                                        let desc = `<b>📌 ${v.localidade}</b><br>Agente: ${v.agente}<br>🐶 Cães: ${v.caes}<br>🐱 Gatos: ${v.gatos}<br><small>Data: ${v.data_vacinacao}</small>`;
+                                        // BOTÃO STREET VIEW ADICIONADO AQUI TAMBÉM
+                                        let btnStreetView = `<hr style="margin:8px 0;"><a href="https://www.google.com/maps?layer=c&cbll=${v.lat},${v.lng}" target="_blank" class="btn btn-sm btn-warning w-100 text-dark fw-bold" style="font-size: 12px; text-decoration: none;"><i class="fa-solid fa-street-view"></i> Abrir Street View</a>`;
+                                        let desc = `<b>📌 ${v.localidade}</b><br>Agente: ${v.agente}<br>🐶 Cães: ${v.caes}<br>🐱 Gatos: ${v.gatos}<br><small>Data: ${v.data_vacinacao}</small>` + btnStreetView;
                                         L.marker([v.lat, v.lng], {icon: iconeZoonose}).bindPopup(desc).addTo(mapZoonose);
                                     }
                                 });
@@ -612,7 +613,7 @@
         });
 
         // ==========================================
-        // AUTO-ATUALIZAÇÃO INVISÍVEL
+        // AUTO-ATUALIZAÇÃO INVISÍVEL E MAPA/CARDS
         // ==========================================
         setInterval(function() {
             fetch(window.location.href)
@@ -622,7 +623,6 @@
                 const filtroSemana = document.getElementById('map-semana').value;
                 const filtroAgente = document.getElementById('map-agente').value;
                 
-                // Só atualiza os números sozinho se não tiver nenhum filtro selecionado
                 if (filtroSemana === "" && filtroAgente === "") {
                     document.getElementById('card-total-visitas').innerText = doc.getElementById('card-total-visitas').innerText;
                     document.getElementById('card-total-focos').innerText = doc.getElementById('card-total-focos').innerText;
@@ -631,9 +631,6 @@
             .catch(err => console.log("Erro na auto-atualização", err));
         }, 60000); 
 
-        // ==========================================
-        // MAPA E CARTÕES SUPERIORES (Sincronizados)
-        // ==========================================
         function renderMapaJS() {
             if(markerLayer) { map.removeLayer(markerLayer); } 
             markerLayer = L.layerGroup().addTo(map);
@@ -645,24 +642,24 @@
             let contadorFocos = 0;
 
             visitasDB.forEach(v => {
-                // Filtra tanto para o mapa quanto para os cartões
-                if (sem !== "" && v.semana !== sem) return; 
-                if (ag !== "" && v.agente !== ag) return;
+                if ((sem !== "" && v.semana !== sem) || (ag !== "" && v.agente !== ag)) return;
                 
-                // Atualiza a contagem dos cartões
                 contadorVisitas++;
                 if (v.tubitos > 0) { contadorFocos++; }
 
-                // Pinta no mapa
                 if(v.lat && v.lng) {
                     let icone = iconeNormal; let txtStatus = 'Normal (Inspecionado)';
                     if (v.tubitos > 0) { icone = iconeFoco; txtStatus = 'Foco de Dengue!'; } else if (v.status === 'F' || v.status === 'R') { icone = iconeFechada; txtStatus = v.status === 'F' ? 'Fechada' : 'Recusada'; }
-                    let desc = `<b>${txtStatus}</b><br>Nº ${v.numero} - ${v.endereco}<br>Agente: ${v.agente}<br>Tubitos: ${v.tubitos}<br><small>Data: ${v.data_visita}</small>`;
+                    
+                    // BOTÃO STREET VIEW ADICIONADO AQUI
+                    let btnStreetView = `<hr style="margin:8px 0;"><a href="https://www.google.com/maps?layer=c&cbll=${v.lat},${v.lng}" target="_blank" class="btn btn-sm btn-primary w-100 text-white" style="font-size: 12px; text-decoration: none;"><i class="fa-solid fa-street-view"></i> Abrir Street View</a>`;
+                    
+                    let desc = `<b>${txtStatus}</b><br>Nº ${v.numero} - ${v.endereco}<br>Agente: ${v.agente}<br>Tubitos: ${v.tubitos}<br><small>Data: ${v.data_visita}</small>` + btnStreetView;
+                    
                     L.marker([v.lat, v.lng], {icon: icone}).bindPopup(desc).addTo(markerLayer);
                 }
             });
 
-            // Atualiza os números nos cartões azuis e vermelhos instantaneamente
             document.getElementById('card-total-visitas').innerText = contadorVisitas;
             document.getElementById('card-total-focos').innerText = contadorFocos;
         }
